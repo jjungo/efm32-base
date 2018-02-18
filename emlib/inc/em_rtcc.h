@@ -1,10 +1,10 @@
 /***************************************************************************//**
  * @file
  * @brief Real Time Counter (RTCC) peripheral API.
- * @version 5.2.1
+ * @version 5.3.5
  *******************************************************************************
  * # License
- * <b>Copyright 2016 Silicon Laboratories, Inc. http://www.silabs.com</b>
+ * <b>Copyright 2016 Silicon Laboratories, Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * Permission is granted to anyone to use this software for any purpose,
@@ -75,11 +75,11 @@ extern "C" {
 /** Operational mode of the counter. */
 typedef enum {
   /** Normal counter mode. The counter is incremented by 1 for each tick. */
-  rtccCntModeNormal = _RTCC_CTRL_CNTTICK_PRESC,
+  rtccCntModeNormal = _RTCC_CTRL_CNTMODE_NORMAL,
 
   /** Calendar mode. Refer to the RTCC chapter of the Reference Manual for more
    *  details on the calendar mode. */
-  rtccCntModeCalendar = _RTCC_CTRL_CNTTICK_CCV0MATCH
+  rtccCntModeCalendar = _RTCC_CTRL_CNTMODE_CALENDAR
 } RTCC_CntMode_TypeDef;
 
 /** Counter prescaler selection. */
@@ -137,10 +137,18 @@ typedef enum {
   rtccPRSCh5 = _RTCC_CC_CTRL_PRSSEL_PRSCH5,   /**< PRS channel 5. */
   rtccPRSCh6 = _RTCC_CC_CTRL_PRSSEL_PRSCH6,   /**< PRS channel 6. */
   rtccPRSCh7 = _RTCC_CC_CTRL_PRSSEL_PRSCH7,   /**< PRS channel 7. */
+#if defined(_RTCC_CC_CTRL_PRSSEL_PRSCH8)
   rtccPRSCh8 = _RTCC_CC_CTRL_PRSSEL_PRSCH8,   /**< PRS channel 8. */
+#endif
+#if defined(_RTCC_CC_CTRL_PRSSEL_PRSCH9)
   rtccPRSCh9 = _RTCC_CC_CTRL_PRSSEL_PRSCH9,   /**< PRS channel 9. */
+#endif
+#if defined(_RTCC_CC_CTRL_PRSSEL_PRSCH10)
   rtccPRSCh10 = _RTCC_CC_CTRL_PRSSEL_PRSCH10, /**< PRS channel 10. */
+#endif
+#if defined(_RTCC_CC_CTRL_PRSSEL_PRSCH11)
   rtccPRSCh11 = _RTCC_CC_CTRL_PRSSEL_PRSCH11  /**< PRS channel 11. */
+#endif
 } RTCC_PRSSel_TypeDef;
 
 /** Input edge select. */
@@ -655,7 +663,7 @@ void RTCC_StatusClear(void);
  ******************************************************************************/
 __STATIC_INLINE uint32_t RTCC_StatusGet(void)
 {
-  while ( RTCC->SYNCBUSY & RTCC_SYNCBUSY_CMD ) {
+  while ((RTCC->SYNCBUSY & RTCC_SYNCBUSY_CMD) != 0U) {
     // Wait for syncronization.
   }
   return RTCC->STATUS;

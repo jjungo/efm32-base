@@ -1,10 +1,10 @@
 /***************************************************************************//**
  * @file em_adc.h
  * @brief Analog to Digital Converter (ADC) peripheral API
- * @version 5.2.1
+ * @version 5.3.5
  *******************************************************************************
  * # License
- * <b>Copyright 2016 Silicon Laboratories, Inc. http://www.silabs.com</b>
+ * <b>Copyright 2016 Silicon Laboratories, Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * Permission is granted to anyone to use this software for any purpose,
@@ -162,10 +162,18 @@ typedef enum {
   adcPRSSELCh5 = _ADC_SINGLECTRLX_PRSSEL_PRSCH5, /**< PRS channel 5. */
   adcPRSSELCh6 = _ADC_SINGLECTRLX_PRSSEL_PRSCH6, /**< PRS channel 6. */
   adcPRSSELCh7 = _ADC_SINGLECTRLX_PRSSEL_PRSCH7,  /**< PRS channel 7. */
+#if defined(_ADC_SINGLECTRLX_PRSSEL_PRSCH8)
   adcPRSSELCh8 = _ADC_SINGLECTRLX_PRSSEL_PRSCH8,  /**< PRS channel 8. */
+#endif
+#if defined(_ADC_SINGLECTRLX_PRSSEL_PRSCH9)
   adcPRSSELCh9 = _ADC_SINGLECTRLX_PRSSEL_PRSCH9,  /**< PRS channel 9. */
+#endif
+#if defined(_ADC_SINGLECTRLX_PRSSEL_PRSCH10)
   adcPRSSELCh10 = _ADC_SINGLECTRLX_PRSSEL_PRSCH10,  /**< PRS channel 10. */
+#endif
+#if defined(_ADC_SINGLECTRLX_PRSSEL_PRSCH11)
   adcPRSSELCh11 = _ADC_SINGLECTRLX_PRSSEL_PRSCH11,  /**< PRS channel 11. */
+#endif
 #if defined(_ADC_SINGLECTRLX_PRSSEL_PRSCH12)
   adcPRSSELCh12 = _ADC_SINGLECTRLX_PRSSEL_PRSCH12,  /**< PRS channel 12. */
   adcPRSSELCh13 = _ADC_SINGLECTRLX_PRSSEL_PRSCH13,  /**< PRS channel 13. */
@@ -178,7 +186,7 @@ typedef enum {
 /** Single and scan mode voltage references. Using unshifted enums and or
     in ADC_CTRLX_VREFSEL_REG to select the extension register CTRLX_VREFSEL. */
 #if defined(_ADC_SCANCTRLX_VREFSEL_MASK)
-#define ADC_CTRLX_VREFSEL_REG     0x80
+#define ADC_CTRLX_VREFSEL_REG     0x80UL
 #endif
 typedef enum {
   /** Internal 1.25V reference. */
@@ -482,6 +490,9 @@ typedef enum {
   adcPosSelAPORT4YCH30 = _ADC_SINGLECTRL_POSSEL_APORT4YCH30,
   adcPosSelAPORT4XCH31 = _ADC_SINGLECTRL_POSSEL_APORT4XCH31,
   adcPosSelAVDD        = _ADC_SINGLECTRL_POSSEL_AVDD,
+#if defined(_ADC_SINGLECTRL_POSSEL_BU)
+  adcPosSelBUVDD       = _ADC_SINGLECTRL_POSSEL_BU,
+#endif
   adcPosSelDVDD        = _ADC_SINGLECTRL_POSSEL_AREG,
   adcPosSelPAVDD       = _ADC_SINGLECTRL_POSSEL_VREGOUTPA,
   adcPosSelDECOUPLE    = _ADC_SINGLECTRL_POSSEL_PDBU,
@@ -501,7 +512,6 @@ typedef enum {
 #define adcPosSelVREGOUTPA      adcPosSelPAVDD
 #define adcPosSelAREG           adcPosSelDVDD
 #define adcPosSelPDBU           adcPosSelDECOUPLE
-
 #endif
 
 #if defined(_ADC_SINGLECTRL_NEGSEL_MASK)
@@ -1135,7 +1145,7 @@ uint32_t ADC_ScanSingleEndedInputAdd(ADC_InitScan_TypeDef *scanInit,
 uint32_t ADC_ScanDifferentialInputAdd(ADC_InitScan_TypeDef *scanInit,
                                       ADC_ScanInputGroup_TypeDef inputGroup,
                                       ADC_PosSel_TypeDef posSel,
-                                      ADC_ScanNegInput_TypeDef adcScanNegInput);
+                                      ADC_ScanNegInput_TypeDef negInput);
 #endif
 
 void ADC_InitSingle(ADC_TypeDef *adc, const ADC_InitSingle_TypeDef *init);

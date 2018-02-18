@@ -1,10 +1,10 @@
 /***************************************************************************//**
  * @file em_smu.h
  * @brief Security Management Unit (SMU) peripheral API
- * @version 5.2.1
+ * @version 5.3.5
  *******************************************************************************
  * # License
- * <b>Copyright 2016 Silicon Laboratories, Inc. http://www.silabs.com</b>
+ * <b>Copyright 2016 Silicon Laboratories, Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * Permission is granted to anyone to use this software for any purpose,
@@ -162,26 +162,38 @@ typedef enum {
   smuPeripheralWTIMER0    = 32 + _SMU_PPUPATD1_WTIMER0_SHIFT,  /**< SMU peripheral identifier for WTIMER0   */
 
 #elif defined(_SILICON_LABS_GECKO_INTERNAL_SDID_95)
+#if defined(_SMU_PPUPATD0_ACMP0_SHIFT)
   smuPeripheralACMP0      = _SMU_PPUPATD0_ACMP0_SHIFT,         /**< SMU peripheral identifier for ACMP0     */
+#endif
+#if defined(_SMU_PPUPATD0_ACMP1_SHIFT)
   smuPeripheralACMP1      = _SMU_PPUPATD0_ACMP1_SHIFT,         /**< SMU peripheral identifier for ACMP1     */
+#endif
   smuPeripheralADC0       = _SMU_PPUPATD0_ADC0_SHIFT,          /**< SMU peripheral identifier for ADC0      */
   smuPeripheralCMU        = _SMU_PPUPATD0_CMU_SHIFT,           /**< SMU peripheral identifier for CMU       */
   smuPeripheralCRYOTIMER  = _SMU_PPUPATD0_CRYOTIMER_SHIFT,     /**< SMU peripheral identifier for CRYOTIMER */
   smuPeripheralCRYPTO     = _SMU_PPUPATD0_CRYPTO0_SHIFT,       /**< SMU peripheral identifier for CRYPTO0   */
+#if defined(_SMU_PPUPATD0_VDAC0_SHIFT)
   smuPeripheralVDAC0      = _SMU_PPUPATD0_VDAC0_SHIFT,         /**< SMU peripheral identifier for VDAC0     */
+#endif
   smuPeripheralPRS        = _SMU_PPUPATD0_PRS_SHIFT,           /**< SMU peripheral identifier for PRS       */
   smuPeripheralEMU        = _SMU_PPUPATD0_EMU_SHIFT,           /**< SMU peripheral identifier for EMU       */
   smuPeripheralFPUEH      = _SMU_PPUPATD0_FPUEH_SHIFT,         /**< SMU peripheral identifier for FPUEH     */
   smuPeripheralGPCRC      = _SMU_PPUPATD0_GPCRC_SHIFT,         /**< SMU peripheral identifier for GPCRC     */
   smuPeripheralGPIO       = _SMU_PPUPATD0_GPIO_SHIFT,          /**< SMU peripheral identifier for GPIO      */
   smuPeripheralI2C0       = _SMU_PPUPATD0_I2C0_SHIFT,          /**< SMU peripheral identifier for I2C0      */
+#if defined(_SMU_PPUPATD0_IDAC0_SHIFT)
   smuPeripheralIDAC0      = _SMU_PPUPATD0_IDAC0_SHIFT,         /**< SMU peripheral identifier for IDAC0     */
+#endif
   smuPeripheralMSC        = _SMU_PPUPATD0_MSC_SHIFT,           /**< SMU peripheral identifier for MSC       */
   smuPeripheralLDMA       = _SMU_PPUPATD0_LDMA_SHIFT,          /**< SMU peripheral identifier for LDMA      */
+#if defined(_SMU_PPUPATD0_LESENSE_SHIFT)
   smuPeripheralLESENSE    = _SMU_PPUPATD0_LESENSE_SHIFT,       /**< SMU peripheral identifier for LESENSE   */
+#endif
   smuPeripheralLETIMER0   = _SMU_PPUPATD0_LETIMER0_SHIFT,      /**< SMU peripheral identifier for LETIMER0  */
   smuPeripheralLEUART     = _SMU_PPUPATD0_LEUART0_SHIFT,       /**< SMU peripheral identifier for LEUART0   */
+#if defined(_SMU_PPUPATD0_PCNT0_SHIFT)
   smuPeripheralPCNT0      = _SMU_PPUPATD0_PCNT0_SHIFT,         /**< SMU peripheral identifier for PCNT0     */
+#endif
   smuPeripheralRMU        = _SMU_PPUPATD0_RMU_SHIFT,           /**< SMU peripheral identifier for RMU       */
   smuPeripheralRTCC       = _SMU_PPUPATD0_RTCC_SHIFT,          /**< SMU peripheral identifier for RTCC      */
   smuPeripheralSMU        = _SMU_PPUPATD0_SMU_SHIFT,           /**< SMU peripheral identifier for SMU       */
@@ -269,6 +281,46 @@ typedef enum {
   smuPeripheralWTIMER1   = 32 + _SMU_PPUPATD1_WTIMER1_SHIFT,   /**< SMU peripheral identifier for WTIMER1   */
   smuPeripheralWTIMER2   = 32 + _SMU_PPUPATD1_WTIMER2_SHIFT,   /**< SMU peripheral identifier for WTIMER2   */
   smuPeripheralWTIMER3   = 32 + _SMU_PPUPATD1_WTIMER3_SHIFT,   /**< SMU peripheral identifier for WTIMER3   */
+
+#elif defined(_SILICON_LABS_GECKO_INTERNAL_SDID_103)
+  smuPeripheralACMP0     = _SMU_PPUPATD0_ACMP0_SHIFT,          /**< SMU peripheral identifier for ACMP0     */
+  smuPeripheralACMP1     = _SMU_PPUPATD0_ACMP1_SHIFT,          /**< SMU peripheral identifier for ACMP1     */
+  smuPeripheralADC0      = _SMU_PPUPATD0_ADC0_SHIFT,           /**< SMU peripheral identifier for ADC0      */
+  smuPeripheralCAN0      = _SMU_PPUPATD0_CAN0_SHIFT,           /**< SMU peripheral identifier for CAN0      */
+  smuPeripheralCMU       = _SMU_PPUPATD0_CMU_SHIFT,            /**< SMU peripheral identifier for CMU       */
+  smuPeripheralCRYOTIMER = _SMU_PPUPATD0_CRYOTIMER_SHIFT,      /**< SMU peripheral identifier for CRYOTIMER */
+  smuPeripheralCRYPTO0   = _SMU_PPUPATD0_CRYPTO0_SHIFT,        /**< SMU peripheral identifier for CRYPTO0   */
+  smuPeripheralCSEN      = _SMU_PPUPATD0_CSEN_SHIFT,           /**< SMU peripheral identifier for CSEN      */
+  smuPeripheralVDAC0     = _SMU_PPUPATD0_VDAC0_SHIFT,          /**< SMU peripheral identifier for VDAC0     */
+  smuPeripheralPRS       = _SMU_PPUPATD0_PRS_SHIFT,            /**< SMU peripheral identifier for PRS       */
+  smuPeripheralEMU       = _SMU_PPUPATD0_EMU_SHIFT,            /**< SMU peripheral identifier for EMU       */
+  smuPeripheralGPCRC     = _SMU_PPUPATD0_GPCRC_SHIFT,          /**< SMU peripheral identifier for GPCRC     */
+  smuPeripheralGPIO      = _SMU_PPUPATD0_GPIO_SHIFT,           /**< SMU peripheral identifier for GPIO      */
+  smuPeripheralI2C0      = _SMU_PPUPATD0_I2C0_SHIFT,           /**< SMU peripheral identifier for I2C0      */
+  smuPeripheralI2C1      = _SMU_PPUPATD0_I2C1_SHIFT,           /**< SMU peripheral identifier for I2C1      */
+  smuPeripheralMSC       = _SMU_PPUPATD0_MSC_SHIFT,            /**< SMU peripheral identifier for MAC       */
+#if defined(_SMU_PPUPATD0_LCD_SHIFT)
+  smuPeripheralLCD       = _SMU_PPUPATD0_LCD_SHIFT,            /**< SMU peripheral identifier for LCD       */
+#endif
+  smuPeripheralLDMA      = _SMU_PPUPATD0_LDMA_SHIFT,           /**< SMU peripheral identifier for LDMA      */
+  smuPeripheralLESENSE   = _SMU_PPUPATD0_LESENSE_SHIFT,        /**< SMU peripheral identifier for LESENSE   */
+  smuPeripheralLETIMER0  = _SMU_PPUPATD0_LETIMER0_SHIFT,       /**< SMU peripheral identifier for LETIMER0  */
+  smuPeripheralLEUART0   = _SMU_PPUPATD0_LEUART0_SHIFT,        /**< SMU peripheral identifier for LEUART0   */
+  smuPeripheralPCNT0     = _SMU_PPUPATD0_PCNT0_SHIFT,          /**< SMU peripheral identifier for PCNT0     */
+  smuPeripheralRMU       = _SMU_PPUPATD0_RMU_SHIFT,            /**< SMU peripheral identifier for RMU       */
+  smuPeripheralRTCC      = _SMU_PPUPATD0_RTCC_SHIFT,           /**< SMU peripheral identifier for RTCC      */
+  smuPeripheralSMU       = _SMU_PPUPATD0_SMU_SHIFT,            /**< SMU peripheral identifier for SMU       */
+  smuPeripheralTIMER0    = _SMU_PPUPATD0_TIMER0_SHIFT,         /**< SMU peripheral identifier for TIMER0    */
+  smuPeripheralTIMER1    = _SMU_PPUPATD0_TIMER1_SHIFT,         /**< SMU peripheral identifier for TIMER0    */
+  smuPeripheralTRNG0     = _SMU_PPUPATD0_TRNG0_SHIFT,          /**< SMU peripheral identifier for TRNG0     */
+  smuPeripheralUART0     = _SMU_PPUPATD0_UART0_SHIFT,          /**< SMU peripheral identifier for UART0     */
+  smuPeripheralUSART0    = _SMU_PPUPATD0_USART0_SHIFT,         /**< SMU peripheral identifier for USART0    */
+  smuPeripheralUSART1    = _SMU_PPUPATD0_USART1_SHIFT,         /**< SMU peripheral identifier for USART1    */
+  smuPeripheralUSART2    = _SMU_PPUPATD0_USART2_SHIFT,         /**< SMU peripheral identifier for USART2    */
+  smuPeripheralUSART3    = 32 + _SMU_PPUPATD1_USART3_SHIFT,    /**< SMU peripheral identifier for USART3    */
+  smuPeripheralWDOG0     = 32 + _SMU_PPUPATD1_WDOG0_SHIFT,     /**< SMU peripheral identifier for WDOG0     */
+  smuPeripheralWTIMER0   = 32 + _SMU_PPUPATD1_WTIMER0_SHIFT,   /**< SMU peripheral identifier for WTIMER0   */
+  smuPeripheralWTIMER1   = 32 + _SMU_PPUPATD1_WTIMER1_SHIFT,   /**< SMU peripheral identifier for WTIMER1   */
 
 #else
 #error "No peripherals defined for SMU for this device configuration."
@@ -484,6 +536,44 @@ typedef struct {
   bool privilegedWTIMER1    : 1;     /**< Privileged access enabler for WTIMER1   */
   bool privilegedWTIMER2    : 1;     /**< Privileged access enabler for WTIMER2   */
   bool privilegedWTIMER3    : 1;     /**< Privileged access enabler for WTIMER3   */
+
+#elif defined(_SILICON_LABS_GECKO_INTERNAL_SDID_103)
+  bool privilegedACMP0      : 1;     /**< Privileged access enabler for ACMP0     */
+  bool privilegedACMP1      : 1;     /**< Privileged access enabler for ACMP1     */
+  bool privilegedADC0       : 1;     /**< Privileged access enabler for ADC0      */
+  bool privilegedCAN0       : 1;     /**< Privileged access enabler for CAN0      */
+  bool privilegedCMU        : 1;     /**< Privileged access enabler for CMU       */
+  bool privilegedCRYOTIMER  : 1;     /**< Privileged access enabler for CRYOTIMER */
+  bool privilegedCRYPTO0    : 1;     /**< Privileged access enabler for CRYPTO0   */
+  bool privilegedCSEN       : 1;     /**< Privileged access enabler for CSEN      */
+  bool privilegedVDAC0      : 1;     /**< Privileged access enabler for VDAC0     */
+  bool privilegedPRS        : 1;     /**< Privileged access enabler for PRS       */
+  bool privilegedEMU        : 1;     /**< Privileged access enabler for EMU       */
+  bool privilegedGPCRC      : 1;     /**< Privileged access enabler for GPCRC     */
+  bool privilegedGPIO       : 1;     /**< Privileged access enabler for GPIO      */
+  bool privilegedI2C0       : 1;     /**< Privileged access enabler for I2C0      */
+  bool privilegedI2C1       : 1;     /**< Privileged access enabler for I2C1      */
+  bool privilegedMSC        : 1;     /**< Privileged access enabler for MAC       */
+  bool privilegedLCD        : 1;     /**< Privileged access enabler for LCD       */
+  bool privilegedLDMA       : 1;     /**< Privileged access enabler for LDMA      */
+  bool privilegedLESENSE    : 1;     /**< Privileged access enabler for LESENSE   */
+  bool privilegedLETIMER0   : 1;     /**< Privileged access enabler for LETIMER0  */
+  bool privilegedLEUART0    : 1;     /**< Privileged access enabler for LEUART0   */
+  bool privilegedPCNT0      : 1;     /**< Privileged access enabler for PCNT0     */
+  bool privilegedRMU        : 1;     /**< Privileged access enabler for RMU       */
+  bool privilegedRTCC       : 1;     /**< Privileged access enabler for RTCC      */
+  bool privilegedSMU        : 1;     /**< Privileged access enabler for SMU       */
+  bool privilegedTIMER0     : 1;     /**< Privileged access enabler for TIMER0    */
+  bool privilegedTIMER1     : 1;     /**< Privileged access enabler for TIMER1    */
+  bool privilegedTRNG0      : 1;     /**< Privileged access enabler for TRNG0     */
+  bool privilegedUART0      : 1;     /**< Privileged access enabler for UART0     */
+  bool privilegedUSART0     : 1;     /**< Privileged access enabler for USART0    */
+  bool privilegedUSART1     : 1;     /**< Privileged access enabler for USART1    */
+  bool privilegedUSART2     : 1;     /**< Privileged access enabler for USART2    */
+  bool privilegedUSART3     : 1;     /**< Privileged access enabler for USART3    */
+  bool privilegedWDOG0      : 1;     /**< Privileged access enabler for WDOG0     */
+  bool privilegedWTIMER0    : 1;     /**< Privileged access enabler for WTIMER0   */
+  bool privilegedWTIMER1    : 1;     /**< Privileged access enabler for WTIMER1   */
 
 #else
 #error "No peripherals defined for SMU for this device configuration"

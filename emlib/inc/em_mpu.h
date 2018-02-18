@@ -1,10 +1,10 @@
 /***************************************************************************//**
  * @file em_mpu.h
  * @brief Memory protection unit (MPU) peripheral API
- * @version 5.2.1
+ * @version 5.3.5
  *******************************************************************************
  * # License
- * <b>Copyright 2016 Silicon Laboratories, Inc. http://www.silabs.com</b>
+ * <b>Copyright 2016 Silicon Laboratories, Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * Permission is granted to anyone to use this software for any purpose,
@@ -195,7 +195,9 @@ void MPU_ConfigureRegion(const MPU_RegionInit_TypeDef *init);
  ******************************************************************************/
 __STATIC_INLINE void MPU_Disable(void)
 {
+#if defined(SCB_SHCSR_MEMFAULTENA_Msk)
   SCB->SHCSR &= ~SCB_SHCSR_MEMFAULTENA_Msk;      /* Disable fault exceptions */
+#endif
   MPU->CTRL  &= ~MPU_CTRL_ENABLE_Msk;            /* Disable the MPU */
 }
 
@@ -215,7 +217,9 @@ __STATIC_INLINE void MPU_Enable(uint32_t flags)
                          | MPU_CTRL_ENABLE_Msk)));
 
   MPU->CTRL   = flags | MPU_CTRL_ENABLE_Msk;     /* Enable the MPU */
+#if defined(SCB_SHCSR_MEMFAULTENA_Msk)
   SCB->SHCSR |= SCB_SHCSR_MEMFAULTENA_Msk;       /* Enable fault exceptions */
+#endif
 }
 
 /** @} (end addtogroup MPU) */

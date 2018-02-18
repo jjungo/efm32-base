@@ -1,10 +1,10 @@
 /***************************************************************************//**
  * @file em_csen.h
  * @brief Capacitive Sense Module (CSEN) peripheral API
- * @version 5.2.1
+ * @version 5.3.5
  *******************************************************************************
  * # License
- * <b>Copyright 2016 Silicon Laboratories, Inc. http://www.silabs.com</b>
+ * <b>Copyright 2016 Silicon Laboratories, Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * Permission is granted to anyone to use this software for any purpose,
@@ -237,10 +237,18 @@ typedef enum {
   csenPRSSELCh5  = _CSEN_PRSSEL_PRSSEL_PRSCH5,  /**< PRS channel 5. */
   csenPRSSELCh6  = _CSEN_PRSSEL_PRSSEL_PRSCH6,  /**< PRS channel 6. */
   csenPRSSELCh7  = _CSEN_PRSSEL_PRSSEL_PRSCH7,  /**< PRS channel 7. */
+#if defined(_CSEN_PRSSEL_PRSSEL_PRSCH8)
   csenPRSSELCh8  = _CSEN_PRSSEL_PRSSEL_PRSCH8,  /**< PRS channel 8. */
+#endif
+#if defined(_CSEN_PRSSEL_PRSSEL_PRSCH9)
   csenPRSSELCh9  = _CSEN_PRSSEL_PRSSEL_PRSCH9,  /**< PRS channel 9. */
+#endif
+#if defined(_CSEN_PRSSEL_PRSSEL_PRSCH10)
   csenPRSSELCh10 = _CSEN_PRSSEL_PRSSEL_PRSCH10, /**< PRS channel 10. */
+#endif
+#if defined(_CSEN_PRSSEL_PRSSEL_PRSCH11)
   csenPRSSELCh11 = _CSEN_PRSSEL_PRSSEL_PRSCH11, /**< PRS channel 11. */
+#endif
 } CSEN_PRSSel_TypeDef;
 
 /** APORT channel to CSEN input selection. */
@@ -436,27 +444,27 @@ typedef struct {
   CSEN_DMRes_TypeDef            dmRes;
 
   /** Sets the number of DM iterations (comparisons) per cycle. Only applies
-   * to the Delta Modulation converter. */
+   *  to the Delta Modulation converter. */
   uint8_t                       dmIterPerCycle;
 
   /** Sets number of DM converter cycles. Only applies to the
-   * Delta Modulation converter. */
+   *  Delta Modulation converter. */
   uint8_t                       dmCycles;
 
   /** Sets the DM converter initial delta value. Only applies to the
-   * Delta Modulation converter. */
+   *  Delta Modulation converter. */
   uint8_t                       dmDelta;
 
   /** Disable DM automatic delta size reduction per cycle. Only applies to the
-   * Delta Modulation converter. */
+   *  Delta Modulation converter. */
   bool                          dmFixedDelta;
 
   /** Selects the reset phase timing. Most measurements should use the default
-   * value. See reference manual for details on when to adjust. */
+   *  value. See reference manual for details on when to adjust. */
   CSEN_ResetPhaseSel_TypeDef    resetPhase;
 
   /** Selects the output drive strength.  Most measurements should use the
-   * default value. See reference manual for details on when to adjust. */
+  *  default value. See reference manual for details on when to adjust. */
   CSEN_DriveSel_TypeDef         driveSel;
 
   /** Selects the converter gain. */

@@ -1,11 +1,11 @@
 /***************************************************************************//**
  * @file gpiointerrupt.c
  * @brief GPIOINT API implementation
- * @version 5.2.1
+ * @version 5.3.5
  *
  *******************************************************************************
  * # License
- * <b>(C) Copyright 2015 Silicon Labs, http://www.silabs.com</b>
+ * <b>(C) Copyright 2015 Silicon Labs, www.silabs.com</b>
  *******************************************************************************
  *
  * This file is licensed under the Silabs License Agreement. See the file
@@ -113,7 +113,7 @@ static void GPIOINT_IRQDispatcher(uint32_t iflags)
   GPIOINT_IrqCallbackPtr_t callback;
 
   /* check for all flags set in IF register */
-  while (iflags) {
+  while (iflags != 0U) {
     irqIdx = SL_CTZ(iflags);
 
     /* clear flag*/

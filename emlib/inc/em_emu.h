@@ -1,10 +1,10 @@
 /***************************************************************************//**
  * @file em_emu.h
  * @brief Energy management unit (EMU) peripheral API
- * @version 5.2.1
+ * @version 5.3.5
  *******************************************************************************
  * # License
- * <b>Copyright 2016 Silicon Laboratories, Inc. http://www.silabs.com</b>
+ * <b>Copyright 2016 Silicon Laboratories, Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * Permission is granted to anyone to use this software for any purpose,
@@ -97,7 +97,7 @@ typedef enum {
 } EMU_Resistor_TypeDef;
 #endif
 
-#if defined(BU_PRESENT)
+#if defined(BU_PRESENT) && defined(_SILICON_LABS_32B_SERIES_0)
 /** Backup Power Domain power connection */
 typedef enum {
   /** No connection between main and backup power */
@@ -137,7 +137,7 @@ typedef enum {
   emuPinRetentionDisable = EMU_EM4CTRL_EM4IORETMODE_DISABLE,
   /** Retention through EM4: Pads enter reset state when exiting EM4 */
   emuPinRetentionEm4Exit = EMU_EM4CTRL_EM4IORETMODE_EM4EXIT,
-  /** Retention through EM4 and wakeup: call EMU_UnlatchPinRetention() to
+  /** Retention through EM4 and wakeup: call @ref EMU_UnlatchPinRetention() to
       release pins from retention after EM4 wakeup */
   emuPinRetentionLatch   = EMU_EM4CTRL_EM4IORETMODE_SWUNLATCH,
 } EMU_EM4PinRetention_TypeDef;
@@ -246,7 +246,13 @@ typedef enum {
   emuVmonChannel_AVDD,
   emuVmonChannel_ALTAVDD,
   emuVmonChannel_DVDD,
-  emuVmonChannel_IOVDD0
+  emuVmonChannel_IOVDD0,
+#if defined(_EMU_VMONIO1CTRL_EN_MASK)
+  emuVmonChannel_IOVDD1,
+#endif
+#if defined(_EMU_VMONBUVDDCTRL_EN_MASK)
+  emuVmonChannel_BUVDD,
+#endif
 } EMU_VmonChannel_TypeDef;
 #endif /* EMU_STATUS_VMONRDY */
 
@@ -279,7 +285,7 @@ typedef enum {
   /** Fast-wakeup voltage level. */
   emuVScaleEM23_FastWakeup      = _EMU_CTRL_EM23VSCALE_VSCALE2,
   /** Low-power optimized voltage level. Using this voltage level in EM2 and 3
-      adds 20-25us to wakeup time if the EM0 and 1 voltage must be scaled
+      adds approximately 30us to wakeup time if the EM0 and 1 voltage must be scaled
       up to @ref emuVScaleEM01_HighPerformance on EM2 or 3 exit. */
   emuVScaleEM23_LowPower        = _EMU_CTRL_EM23VSCALE_VSCALE0,
 } EMU_VScaleEM23_TypeDef;
@@ -291,7 +297,7 @@ typedef enum {
   /** Fast-wakeup voltage level. */
   emuVScaleEM4H_FastWakeup      = _EMU_CTRL_EM4HVSCALE_VSCALE2,
   /** Low-power optimized voltage level. Using this voltage level in EM4H
-      adds 20-25us to wakeup time if the EM0 and 1 voltage must be scaled
+      adds approximately 30us to wakeup time if the EM0 and 1 voltage must be scaled
       up to @ref emuVScaleEM01_HighPerformance on EM4H exit. */
   emuVScaleEM4H_LowPower        = _EMU_CTRL_EM4HVSCALE_VSCALE0,
 } EMU_VScaleEM4H_TypeDef;
@@ -332,11 +338,15 @@ typedef enum {
   emuPeripheralRetention_CSEN     = _EMU_EM23PERNORETAINCTRL_CSENDIS_MASK,      /* Select CSEN retention control  */
 #endif
   emuPeripheralRetention_LESENSE0 = _EMU_EM23PERNORETAINCTRL_LESENSE0DIS_MASK,  /* Select LESENSE0 retention control  */
+#if defined(_EMU_EM23PERNORETAINCTRL_WDOG1DIS_MASK)
   emuPeripheralRetention_WDOG1    = _EMU_EM23PERNORETAINCTRL_WDOG1DIS_MASK,     /* Select WDOG1 retention control  */
+#endif
   emuPeripheralRetention_WDOG0    = _EMU_EM23PERNORETAINCTRL_WDOG0DIS_MASK,     /* Select WDOG0 retention control  */
   emuPeripheralRetention_LETIMER0 = _EMU_EM23PERNORETAINCTRL_LETIMER0DIS_MASK,  /* Select LETIMER0 retention control  */
   emuPeripheralRetention_ADC0     = _EMU_EM23PERNORETAINCTRL_ADC0DIS_MASK,      /* Select ADC0 retention control  */
+#if defined(_EMU_EM23PERNORETAINCTRL_IDAC0DIS_MASK)
   emuPeripheralRetention_IDAC0    = _EMU_EM23PERNORETAINCTRL_IDAC0DIS_MASK,     /* Select IDAC0 retention control  */
+#endif
   emuPeripheralRetention_VDAC0    = _EMU_EM23PERNORETAINCTRL_DAC0DIS_MASK,      /* Select DAC0 retention control  */
 #if defined(_EMU_EM23PERNORETAINCTRL_I2C1DIS_MASK)
   emuPeripheralRetention_I2C1     = _EMU_EM23PERNORETAINCTRL_I2C1DIS_MASK,      /* Select I2C1 retention control  */
@@ -356,7 +366,9 @@ typedef enum {
                                     | _EMU_EM23PERNORETAINCTRL_ACMP0DIS_MASK
                                     | _EMU_EM23PERNORETAINCTRL_LESENSE0DIS_MASK,/* Select all peripherals in domain 1 */
   emuPeripheralRetention_D2       = _EMU_EM23PERNORETAINCTRL_ACMP1DIS_MASK
+#if defined(_EMU_EM23PERNORETAINCTRL_IDAC0DIS_MASK)
                                     | _EMU_EM23PERNORETAINCTRL_IDAC0DIS_MASK
+#endif
                                     | _EMU_EM23PERNORETAINCTRL_DAC0DIS_MASK
 #if defined(_EMU_EM23PERNORETAINCTRL_CSENDIS_MASK)
                                     | _EMU_EM23PERNORETAINCTRL_CSENDIS_MASK
@@ -399,7 +411,9 @@ typedef enum {
                                     | _EMU_EM23PERNORETAINCTRL_I2C0DIS_MASK,
   emuPeripheralRetention_ALL       = emuPeripheralRetention_D1
                                      | emuPeripheralRetention_D2
+#if defined(_EMU_EM23PERNORETAINCTRL_WDOG1DIS_MASK)
                                      | emuPeripheralRetention_WDOG1
+#endif
                                      | emuPeripheralRetention_WDOG0,            /* Select all peripherals with retention control  */
 } EMU_PeripheralRetention_TypeDef;
 #endif
@@ -506,7 +520,7 @@ typedef struct {
   }
 #endif
 
-#if defined(BU_PRESENT)
+#if defined(BU_PRESENT) && defined(_SILICON_LABS_32B_SERIES_0)
 /** Backup Power Domain Initialization structure */
 typedef struct {
   /* Backup Power Domain power configuration */
@@ -607,10 +621,10 @@ typedef struct {
     5,                           /* Nominal EM0/1 load current of less than 5mA */  \
     10,                          /* Nominal EM2/3/4 load current less than 10uA  */ \
     200,                         /* Maximum average current of 200mA
-                                    (assume strong battery or other power source) */      \
-    emuDcdcAnaPeripheralPower_DCDC,/* Select DCDC as analog power supply (lower power) */ \
-    emuDcdcLnHighEfficiency,     /* Use high-efficiency mode */                           \
-    emuDcdcLnCompCtrl_4u7F,      /* 4.7uF DCDC capacitor */                               \
+                                    (assume strong battery or other power source) */ \
+    emuDcdcAnaPeripheralPower_AVDD,/* Select AVDD as analog power supply) */         \
+    emuDcdcLnHighEfficiency,     /* Use high-efficiency mode */                      \
+    emuDcdcLnCompCtrl_4u7F,      /* 4.7uF DCDC capacitor */                          \
   }
 #endif
 
@@ -721,7 +735,7 @@ void EMU_UpdateOscConfig(void);
 void EMU_VScaleEM01ByClock(uint32_t clockFrequency, bool wait);
 void EMU_VScaleEM01(EMU_VScaleEM01_TypeDef voltage, bool wait);
 #endif
-#if defined(BU_PRESENT)
+#if defined(BU_PRESENT) && defined(_SILICON_LABS_32B_SERIES_0)
 void EMU_BUPDInit(const EMU_BUPDInit_TypeDef *bupdInit);
 void EMU_BUThresholdSet(EMU_BODMode_TypeDef mode, uint32_t value);
 void EMU_BUThresRangeSet(EMU_BODMode_TypeDef mode, uint32_t value);
@@ -731,7 +745,7 @@ bool EMU_DCDCInit(const EMU_DCDCInit_TypeDef *dcdcInit);
 void EMU_DCDCModeSet(EMU_DcdcMode_TypeDef dcdcMode);
 void EMU_DCDCConductionModeSet(EMU_DcdcConductionMode_TypeDef conductionMode, bool rcoDefaultSet);
 bool EMU_DCDCOutputVoltageSet(uint32_t mV, bool setLpVoltage, bool setLnVoltage);
-void EMU_DCDCOptimizeSlice(uint32_t mALoadCurrent);
+void EMU_DCDCOptimizeSlice(uint32_t em0LoadCurrentmA);
 void EMU_DCDCLnRcoBandSet(EMU_DcdcLnRcoBand_TypeDef band);
 bool EMU_DCDCPowerOff(void);
 #endif
@@ -760,7 +774,8 @@ __STATIC_INLINE void EMU_EnterEM1(void)
  ******************************************************************************/
 __STATIC_INLINE void EMU_VScaleWait(void)
 {
-  while (BUS_RegBitRead(&EMU->STATUS, _EMU_STATUS_VSCALEBUSY_SHIFT)) ;
+  while (BUS_RegBitRead(&EMU->STATUS, _EMU_STATUS_VSCALEBUSY_SHIFT) != 0U) {
+  }
 }
 #endif
 
@@ -775,8 +790,9 @@ __STATIC_INLINE void EMU_VScaleWait(void)
 __STATIC_INLINE EMU_VScaleEM01_TypeDef EMU_VScaleGet(void)
 {
   EMU_VScaleWait();
-  return (EMU_VScaleEM01_TypeDef)((EMU->STATUS & _EMU_STATUS_VSCALE_MASK)
-                                  >> _EMU_STATUS_VSCALE_SHIFT);
+  return (EMU_VScaleEM01_TypeDef)((uint32_t)
+                                  ((EMU->STATUS & _EMU_STATUS_VSCALE_MASK)
+                                   >> _EMU_STATUS_VSCALE_SHIFT));
 }
 #endif
 
@@ -791,7 +807,7 @@ __STATIC_INLINE EMU_VScaleEM01_TypeDef EMU_VScaleGet(void)
  ******************************************************************************/
 __STATIC_INLINE bool EMU_VmonStatusGet(void)
 {
-  return BUS_RegBitRead(&EMU->STATUS, _EMU_STATUS_VMONRDY_SHIFT);
+  return BUS_RegBitRead(&EMU->STATUS, _EMU_STATUS_VMONRDY_SHIFT) != 0U;
 }
 #endif /* _EMU_STATUS_VMONRDY_MASK */
 
@@ -828,7 +844,7 @@ __STATIC_INLINE void EMU_IntDisable(uint32_t flags)
  *
  * @note
  *   Depending on the use, a pending interrupt may already be set prior to
- *   enabling the interrupt. Consider using EMU_IntClear() prior to enabling
+ *   enabling the interrupt. Consider using @ref EMU_IntClear() prior to enabling
  *   if such a pending interrupt should be ignored.
  *
  * @param[in] flags

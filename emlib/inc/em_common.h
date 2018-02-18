@@ -1,10 +1,10 @@
 /***************************************************************************//**
  * @file em_common.h
  * @brief General purpose utilities.
- * @version 5.2.1
+ * @version 5.3.5
  *******************************************************************************
  * # License
- * <b>Copyright 2016 Silicon Laboratories, Inc. http://www.silabs.com</b>
+ * <b>Copyright 2016 Silicon Laboratories, Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * Permission is granted to anyone to use this software for any purpose,
@@ -211,6 +211,51 @@ __STATIC_INLINE uint32_t SL_CTZ(uint32_t value)
 __STATIC_INLINE uint32_t EFM32_CTZ(uint32_t value)
 {
   return SL_CTZ(value);
+}
+
+/***************************************************************************//**
+ * @brief
+ *   Reverse the bits. Use the RBIT instruction if available, else process.
+ *
+ * @param[in] value
+ *   Data value to reverse.
+ *
+ * @return
+ *   Reversed value.
+ ******************************************************************************/
+__STATIC_INLINE uint32_t SL_RBIT(uint32_t value)
+{
+  uint32_t result;
+
+#if (__CORTEX_M >= 0x03U)
+  result = __RBIT(value);
+#else
+  int32_t s = 4 * 8 - 1;
+
+  result = value;
+  for (value >>= 1U; value; value >>= 1U) {
+    result <<= 1U;
+    result |= value & 1U;
+    s--;
+  }
+  result <<= s;
+#endif
+  return result;
+}
+
+/***************************************************************************//**
+ * @brief
+ *   Reverse the bits. Use the RBIT instruction if available, else process.
+ *
+ * @param[in] value
+ *   16-bit data value to reverse.
+ *
+ * @return
+ *   16-bit reversed value.
+ ******************************************************************************/
+__STATIC_INLINE uint32_t SL_RBIT16(uint32_t value)
+{
+  return SL_RBIT(value) >> 16;
 }
 
 /** @} (end addtogroup COMMON) */

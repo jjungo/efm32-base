@@ -1,10 +1,10 @@
 /***************************************************************************//**
  * @file em_lcd.c
  * @brief Liquid Crystal Display (LCD) Peripheral API
- * @version 5.2.1
+ * @version 5.3.5
  *******************************************************************************
  * # License
- * <b>Copyright 2016 Silicon Laboratories, Inc. http://www.silabs.com</b>
+ * <b>Copyright 2016 Silicon Laboratories, Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * Permission is granted to anyone to use this software for any purpose,
@@ -34,9 +34,6 @@
 #if defined(LCD_COUNT) && (LCD_COUNT > 0)
 #include "em_assert.h"
 #include "em_bus.h"
-
-/* LCD is not supported for EFM32GG11 in this release. */
-#if !defined(_SILICON_LABS_GECKO_INTERNAL_SDID_100)
 
 /***************************************************************************//**
  * @addtogroup emlib
@@ -84,18 +81,40 @@ void LCD_Init(const LCD_Init_TypeDef *lcdInit)
                 | _LCD_DISPCTRL_MUX_MASK
                 | _LCD_DISPCTRL_BIAS_MASK
                 | _LCD_DISPCTRL_WAVE_MASK
+#if defined(_LCD_DISPCTRL_VLCDSEL_MASK)
                 | _LCD_DISPCTRL_VLCDSEL_MASK
-                | _LCD_DISPCTRL_CONCONF_MASK);
+#endif
+#if defined(_LCD_DISPCTRL_CONCONF_MASK)
+                | _LCD_DISPCTRL_CONCONF_MASK
+#endif
+#if defined(_LCD_DISPCTRL_MODE_MASK)
+                | _LCD_DISPCTRL_MODE_MASK
+#endif
+#if defined(_LCD_DISPCTRL_CHGRDST_MASK)
+                | _LCD_DISPCTRL_CHGRDST_MASK
+#endif
+                );
 
   /* Configure controller according to initialization structure */
   dispCtrl |= lcdInit->mux; /* also configures MUXE */
   dispCtrl |= lcdInit->bias;
   dispCtrl |= lcdInit->wave;
+#if defined(_SILICON_LABS_32B_SERIES_0)
   dispCtrl |= lcdInit->vlcd;
   dispCtrl |= lcdInit->contrast;
+#endif
+#if defined(_SILICON_LABS_32B_SERIES_1)
+  dispCtrl |= lcdInit->mode;
+  dispCtrl |= (lcdInit->chgrDst << _LCD_DISPCTRL_CHGRDST_SHIFT);
+#endif
 
   /* Update display controller */
   LCD->DISPCTRL = dispCtrl;
+
+#if defined(_SILICON_LABS_32B_SERIES_1)
+  LCD->FRAMERATE = lcdInit->frameRateDivider;
+  LCD_ContrastSet(lcdInit->contrastLevel);
+#endif
 
   /* Enable controller if wanted */
   if (lcdInit->enable) {
@@ -103,6 +122,7 @@ void LCD_Init(const LCD_Init_TypeDef *lcdInit)
   }
 }
 
+#if defined(_SILICON_LABS_32B_SERIES_0)
 /***************************************************************************//**
  * @brief
  *   Select source for VLCD
@@ -129,6 +149,7 @@ void LCD_VLCDSelect(LCD_VLCDSel_TypeDef vlcd)
 
   LCD->DISPCTRL = dispctrl;
 }
+#endif
 
 /***************************************************************************//**
  * @brief
@@ -224,6 +245,7 @@ void LCD_AnimInit(const LCD_AnimInit_TypeDef *animInit)
  * @param[in] enable
  *   Bool true to enable segment updates, false to disable updates
  ******************************************************************************/
+#if defined(_SILICON_LABS_32B_SERIES_0)
 void LCD_SegmentRangeEnable(LCD_SegmentRange_TypeDef segmentRange, bool enable)
 {
   if (enable) {
@@ -232,6 +254,7 @@ void LCD_SegmentRangeEnable(LCD_SegmentRange_TypeDef segmentRange, bool enable)
     LCD->SEGEN &= ~((uint32_t)segmentRange);
   }
 }
+#endif
 
 /***************************************************************************//**
  * @brief
@@ -550,6 +573,7 @@ void LCD_SegmentSetHigh(int com, uint32_t mask, uint32_t bits)
 }
 #endif
 
+#if defined(_SILICON_LABS_32B_SERIES_0)
 /***************************************************************************//**
  * @brief
  *   Configure contrast level on LCD panel
@@ -564,7 +588,38 @@ void LCD_ContrastSet(int level)
   LCD->DISPCTRL = (LCD->DISPCTRL & ~_LCD_DISPCTRL_CONLEV_MASK)
                   | (level << _LCD_DISPCTRL_CONLEV_SHIFT);
 }
+#endif
 
+#if defined(_SILICON_LABS_32B_SERIES_1)
+/***************************************************************************//**
+ * @brief
+ *   Configure contrast level on LCD panel
+ *
+ * @param[in] level
+ *   Contrast level in the range 0-63
+ ******************************************************************************/
+void LCD_ContrastSet(int level)
+{
+  EFM_ASSERT(level < 64);
+
+  LCD->DISPCTRL = (LCD->DISPCTRL & ~_LCD_DISPCTRL_CONTRAST_MASK)
+                  | (level << _LCD_DISPCTRL_CONTRAST_SHIFT);
+}
+#endif
+
+/***************************************************************************//**
+ * @brief
+ *   Configure bias level on LCD panel
+ *
+ * @param[in] bias
+ *   Bias level
+ ******************************************************************************/
+void LCD_BiasSet(LCD_Bias_TypeDef bias)
+{
+  LCD->DISPCTRL = (LCD->DISPCTRL & ~_LCD_DISPCTRL_BIAS_MASK) | bias;
+}
+
+#if defined(_SILICON_LABS_32B_SERIES_0)
 /***************************************************************************//**
  * @brief
  *   Configure voltage booster
@@ -579,6 +634,7 @@ void LCD_VBoostSet(LCD_VBoostLevel_TypeDef vboost)
   /* Reconfigure Voltage Boost */
   LCD->DISPCTRL = (LCD->DISPCTRL & ~_LCD_DISPCTRL_VBLEV_MASK) | vboost;
 }
+#endif
 
 #if defined(LCD_CTRL_DSC)
 /***************************************************************************//**
@@ -713,9 +769,36 @@ void LCD_BiasComSet(int comLine, int biasLevel)
 }
 #endif
 
+#if defined(_SILICON_LABS_32B_SERIES_1)
+/***************************************************************************//**
+ * @brief
+ *   Configure the mode for the LCD panel
+ *
+ * @param[in] mode
+ *   Mode
+ ******************************************************************************/
+void LCD_ModeSet(LCD_Mode_Typedef mode)
+{
+  LCD->DISPCTRL = (LCD->DISPCTRL & ~_LCD_DISPCTRL_MODE_MASK) | mode;
+}
+
+/***************************************************************************//**
+ * @brief
+ *   Configure the charge redistribution cycles for the LCD panel
+ *
+ * @param[in] chgrDst
+ *   Charge redistribution cycles, range 0-4
+ ******************************************************************************/
+void LCD_ChargeRedistributionCyclesSet(uint8_t cycles)
+{
+  EFM_ASSERT(cycles <= 4);
+
+  LCD->DISPCTRL = (LCD->DISPCTRL & ~_LCD_DISPCTRL_CHGRDST_MASK)
+                  | (cycles << _LCD_DISPCTRL_CHGRDST_SHIFT);
+}
+#endif
+
 /** @} (end addtogroup LCD) */
 /** @} (end addtogroup emlib) */
-
-#endif /* !defined(_SILICON_LABS_GECKO_INTERNAL_SDID_100) */
 
 #endif /* defined(LCD_COUNT) && (LCD_COUNT > 0) */

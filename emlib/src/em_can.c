@@ -1,10 +1,10 @@
 /***************************************************************************//**
  * @file em_can.c
  * @brief Controller Area Network API
- * @version 5.2.1
+ * @version 5.3.5
  *******************************************************************************
  * # License
- * <b>Copyright 2016 Silicon Laboratories, Inc. http://www.silabs.com</b>
+ * <b>Copyright 2016 Silicon Laboratories, Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * Permission is granted to anyone to use this software for any purpose,
@@ -44,8 +44,18 @@
  * standard id. The register field can be used for both an 11 bit standard
  * id and a 29 bit extended id. */
 #define _CAN_MIR_ARB_STD_ID_SHIFT         18
+#define _CAN_MIR_MASK_STD_SHIFT           18
 #define _CAN_MIR_ARB_STD_ID_MASK          0x1FFC0000UL
 #define _CAN_MIR_ARB_STD_ID_MAX           0x7FFUL // = 2^11 - 1
+
+#if (CAN_COUNT == 2)
+#define CAN_VALID(can)  ((can == CAN0) || (can == CAN1))
+#elif (CAN_COUNT == 1)
+#define CAN_VALID(can)  (can == CAN0)
+#else
+#error "The actual number of CAN busses is not supported."
+#endif
+
 /** @endcond */
 
 /***************************************************************************//**
@@ -89,8 +99,9 @@
  ******************************************************************************/
 void CAN_Init(CAN_TypeDef *can, const CAN_Init_TypeDef *init)
 {
-  EFM_ASSERT((can == CAN0) || (can == CAN1));
+  EFM_ASSERT(CAN_VALID(can));
 
+  CAN_Enable(can, false);
   can->CTRL = _CAN_CTRL_TEST_MASK;
   can->TEST = _CAN_TEST_RESETVALUE;
   if (init->resetMessages) {
@@ -416,29 +427,41 @@ void CAN_SetIdAndFilter(CAN_TypeDef *can,
   /* Send reading request and wait (3 to 6 cpu cycle) */
   CAN_SendRequest(can, interface, message->msgNum, true);
 
+  /* Reset MSGVAL */
+  mir->CMDMASK |= CAN_MIR_CMDMASK_WRRD;
+  mir->ARB &= ~(0x1 << _CAN_MIR_ARB_MSGVAL_SHIFT);
+  CAN_SendRequest(can, interface, message->msgNum, true);
+
   /* Set which registers to write to the RAM */
-  mir->CMDMASK |= CAN_MIR_CMDMASK_WRRD
-                  | CAN_MIR_CMDMASK_MASKACC;
+  mir->CMDMASK |= CAN_MIR_CMDMASK_MASKACC;
 
   /* Set UMASK bit */
   BUS_RegBitWrite(&mir->CTRL, _CAN_MIR_CTRL_UMASK_SHIFT, useMask);
-
-  /* Configure the masks */
-  mir->MASK = (message->mask << _CAN_MIR_MASK_MASK_SHIFT)
-              | (message->extendedMask << _CAN_MIR_MASK_MXTD_SHIFT)
-              | (message->directionMask << _CAN_MIR_MASK_MDIR_SHIFT);
 
   /* Configure the id */
   if (message->extended) {
     EFM_ASSERT(message->id <= _CAN_MIR_ARB_ID_MASK);
     mir->ARB = (mir->ARB & ~_CAN_MIR_ARB_ID_MASK)
                | (message->id << _CAN_MIR_ARB_ID_SHIFT)
+               | (uint32_t)(0x1 << _CAN_MIR_ARB_MSGVAL_SHIFT)
                | CAN_MIR_ARB_XTD_EXT;
   } else {
     EFM_ASSERT(message->id <= _CAN_MIR_ARB_STD_ID_MAX);
     mir->ARB = (mir->ARB & ~(_CAN_MIR_ARB_ID_MASK | CAN_MIR_ARB_XTD_STD))
-               | (message->id << _CAN_MIR_ARB_STD_ID_SHIFT);
+               | (message->id << _CAN_MIR_ARB_STD_ID_SHIFT)
+               | (uint32_t)(0x1 << _CAN_MIR_ARB_MSGVAL_SHIFT);
   }
+
+  if (message->extendedMask) {
+    mir->MASK = (message->mask << _CAN_MIR_MASK_MASK_SHIFT);
+  } else {
+    mir->MASK = (message->mask << _CAN_MIR_MASK_STD_SHIFT)
+                & _CAN_MIR_ARB_STD_ID_MASK;
+  }
+
+  /* Configure the masks */
+  mir->MASK |= (message->extendedMask << _CAN_MIR_MASK_MXTD_SHIFT)
+               | (message->directionMask << _CAN_MIR_MASK_MDIR_SHIFT);
 
   /* Send writing request */
   CAN_SendRequest(can, interface, message->msgNum, wait);
@@ -529,7 +552,7 @@ void CAN_ConfigureMessageObject(CAN_TypeDef *can,
  *   If message is configured as tx and remoteTransfer = 0, calling this function
  *   will send the data of this Message Object if its parameters are correct.
  *   If message is tx and remoteTransfer = 1, this function will set the data of
- *   message to the RAM and exit ; the data will be automatically sent after
+ *   message to the RAM and exit, the data will be automatically sent after
  *   reception of a remote frame.
  *   If message is rx and remoteTransfer = 1, this function will send a remote
  *   frame to the corresponding id.
@@ -575,9 +598,13 @@ void CAN_SendMessage(CAN_TypeDef *can,
   /* Send reading request and wait (3 to 6 cpu cycle) */
   CAN_SendRequest(can, interface, message->msgNum, true);
 
+  /* Reset MSGVAL */
+  mir->CMDMASK |= CAN_MIR_CMDMASK_WRRD;
+  mir->ARB &= ~(0x1 << _CAN_MIR_ARB_MSGVAL_SHIFT);
+  CAN_SendRequest(can, interface, message->msgNum, true);
+
   /* Set which registers to write to the RAM */
-  mir->CMDMASK |= CAN_MIR_CMDMASK_WRRD
-                  | CAN_MIR_CMDMASK_DATAA
+  mir->CMDMASK |= CAN_MIR_CMDMASK_DATAA
                   | CAN_MIR_CMDMASK_DATAB;
 
   /* If tx = 1 and remoteTransfer = 1, nothing is sent */
@@ -599,11 +626,14 @@ void CAN_SendMessage(CAN_TypeDef *can,
     EFM_ASSERT(message->id <= _CAN_MIR_ARB_ID_MASK);
     mir->ARB = (mir->ARB & ~_CAN_MIR_ARB_ID_MASK)
                | (message->id << _CAN_MIR_ARB_ID_SHIFT)
+               | (uint32_t)(0x1 << _CAN_MIR_ARB_MSGVAL_SHIFT)
                | CAN_MIR_ARB_XTD_EXT;
   } else {
     EFM_ASSERT(message->id <= _CAN_MIR_ARB_STD_ID_MAX);
-    mir->ARB = (mir->ARB & ~(_CAN_MIR_ARB_ID_MASK | CAN_MIR_ARB_XTD_STD))
-               | (message->id << _CAN_MIR_ARB_STD_ID_SHIFT);
+    mir->ARB = (mir->ARB & ~(_CAN_MIR_ARB_ID_MASK | _CAN_MIR_ARB_XTD_MASK))
+               | (uint32_t)(0x1 << _CAN_MIR_ARB_MSGVAL_SHIFT)
+               | (message->id << _CAN_MIR_ARB_STD_ID_SHIFT)
+               | CAN_MIR_ARB_XTD_STD;
   }
 
   /* Set the data */
@@ -640,8 +670,6 @@ void CAN_ReadMessage(CAN_TypeDef *can,
 
   /* Make sure msgNum is in the correct range */
   EFM_ASSERT((message->msgNum > 0) && (message->msgNum <= 32));
-  /* Make sure dlc is in the correct range */
-  EFM_ASSERT(message->dlc <= 8);
 
   CAN_ReadyWait(can, interface);
 
@@ -657,6 +685,12 @@ void CAN_ReadMessage(CAN_TypeDef *can,
 
   /* Send reading request and wait (3 to 6 cpu cycle) */
   CAN_SendRequest(can, interface, message->msgNum, true);
+
+  /* Get dlc from the control register */
+  message->dlc = ((mir->CTRL & _CAN_MIR_CTRL_DLC_MASK) >> _CAN_MIR_CTRL_DLC_SHIFT);
+
+  /* Make sure dlc is in the correct range */
+  EFM_ASSERT(message->dlc <= 8);
 
   /* Copy the data from the MIR registers to the Message Object message */
   buffer = mir->DATAL;

@@ -2,10 +2,10 @@
  * @file em_usart.h
  * @brief Universal synchronous/asynchronous receiver/transmitter (USART/UART)
  *   peripheral API
- * @version 5.2.1
+ * @version 5.3.5
  *******************************************************************************
  * # License
- * <b>Copyright 2016 Silicon Laboratories, Inc. http://www.silabs.com</b>
+ * <b>Copyright 2016 Silicon Laboratories, Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * Permission is granted to anyone to use this software for any purpose,
@@ -154,6 +154,15 @@ typedef enum {
   usartStopbits1p5 = USART_FRAME_STOPBITS_ONEANDAHALF, /**< 1.5 stopbits. */
   usartStopbits2   = USART_FRAME_STOPBITS_TWO          /**< 2 stopbits. */
 } USART_Stopbits_TypeDef;
+
+#if defined(_USART_ROUTEPEN_RTSPEN_MASK) && defined(_USART_ROUTEPEN_CTSPEN_MASK)
+typedef enum {
+  usartHwFlowControlNone = 0,
+  usartHwFlowControlCts = USART_ROUTEPEN_CTSPEN,
+  usartHwFlowControlRts = USART_ROUTEPEN_RTSPEN,
+  usartHwFlowControlCtsAndRts = USART_ROUTEPEN_CTSPEN | USART_ROUTEPEN_RTSPEN,
+} USART_HwFlowControl_TypeDef;
+#endif
 
 /** Clock polarity/phase mode. */
 typedef enum {
@@ -313,6 +322,9 @@ typedef struct {
   /** Auto CS setup time in baud cycles */
   uint8_t               autoCsSetup;
 #endif
+#if defined(_USART_ROUTEPEN_RTSPEN_MASK) && defined(_USART_ROUTEPEN_CTSPEN_MASK)
+  USART_HwFlowControl_TypeDef hwFlowControl;
+#endif
 } USART_InitAsync_TypeDef;
 
 /** USART PRS trigger enable */
@@ -330,48 +342,97 @@ typedef struct {
 } USART_PrsTriggerInit_TypeDef;
 
 /** Default config for USART async init structure. */
+#if defined(_USART_ROUTEPEN_RTSPEN_MASK) && defined(_USART_ROUTEPEN_CTSPEN_MASK)
 #if defined(_USART_TIMING_CSHOLD_MASK) && defined(USART_CTRL_MVDIS)
-#define USART_INITASYNC_DEFAULT                                                            \
-  {                                                                                        \
-    usartEnable,    /* Enable RX/TX when init completed. */                                \
-    0,              /* Use current configured reference clock for configuring baudrate. */ \
-    115200,         /* 115200 bits/s. */                                                   \
-    usartOVS16,     /* 16x oversampling. */                                                \
-    usartDatabits8, /* 8 databits. */                                                      \
-    usartNoParity,  /* No parity. */                                                       \
-    usartStopbits1, /* 1 stopbit. */                                                       \
-    false,          /* Do not disable majority vote. */                                    \
-    false,          /* Not USART PRS input mode. */                                        \
-    usartPrsRxCh0,  /* PRS channel 0. */                                                   \
-    false,          /* Auto CS functionality enable/disable switch */                      \
-    0,              /* Auto CS Hold cycles */                                              \
-    0               /* Auto CS Setup cycles */                                             \
+#define USART_INITASYNC_DEFAULT                                                                   \
+  {                                                                                               \
+    usartEnable,           /* Enable RX/TX when init completed. */                                \
+    0,                     /* Use current configured reference clock for configuring baudrate. */ \
+    115200,                /* 115200 bits/s. */                                                   \
+    usartOVS16,            /* 16x oversampling. */                                                \
+    usartDatabits8,        /* 8 databits. */                                                      \
+    usartNoParity,         /* No parity. */                                                       \
+    usartStopbits1,        /* 1 stopbit. */                                                       \
+    false,                 /* Do not disable majority vote. */                                    \
+    false,                 /* Not USART PRS input mode. */                                        \
+    usartPrsRxCh0,         /* PRS channel 0. */                                                   \
+    false,                 /* Auto CS functionality enable/disable switch */                      \
+    0,                     /* Auto CS Hold cycles */                                              \
+    0,                     /* Auto CS Setup cycles */                                             \
+    usartHwFlowControlNone /* No HW flow control */                                               \
   }
 #elif defined(USART_INPUT_RXPRS) && defined(USART_CTRL_MVDIS)
-#define USART_INITASYNC_DEFAULT                                                            \
-  {                                                                                        \
-    usartEnable,    /* Enable RX/TX when init completed. */                                \
-    0,              /* Use current configured reference clock for configuring baudrate. */ \
-    115200,         /* 115200 bits/s. */                                                   \
-    usartOVS16,     /* 16x oversampling. */                                                \
-    usartDatabits8, /* 8 databits. */                                                      \
-    usartNoParity,  /* No parity. */                                                       \
-    usartStopbits1, /* 1 stopbit. */                                                       \
-    false,          /* Do not disable majority vote. */                                    \
-    false,          /* Not USART PRS input mode. */                                        \
-    usartPrsRxCh0   /* PRS channel 0. */                                                   \
+#define USART_INITASYNC_DEFAULT                                                                   \
+  {                                                                                               \
+    usartEnable,           /* Enable RX/TX when init completed. */                                \
+    0,                     /* Use current configured reference clock for configuring baudrate. */ \
+    115200,                /* 115200 bits/s. */                                                   \
+    usartOVS16,            /* 16x oversampling. */                                                \
+    usartDatabits8,        /* 8 databits. */                                                      \
+    usartNoParity,         /* No parity. */                                                       \
+    usartStopbits1,        /* 1 stopbit. */                                                       \
+    false,                 /* Do not disable majority vote. */                                    \
+    false,                 /* Not USART PRS input mode. */                                        \
+    usartPrsRxCh0,         /* PRS channel 0. */                                                   \
+    usartHwFlowControlNone /* No HW flow control */                                               \
   }
 #else
-#define USART_INITASYNC_DEFAULT                                                            \
-  {                                                                                        \
-    usartEnable,    /* Enable RX/TX when init completed. */                                \
-    0,              /* Use current configured reference clock for configuring baudrate. */ \
-    115200,         /* 115200 bits/s. */                                                   \
-    usartOVS16,     /* 16x oversampling. */                                                \
-    usartDatabits8, /* 8 databits. */                                                      \
-    usartNoParity,  /* No parity. */                                                       \
-    usartStopbits1  /* 1 stopbit. */                                                       \
+#define USART_INITASYNC_DEFAULT                                                                   \
+  {                                                                                               \
+    usartEnable,           /* Enable RX/TX when init completed. */                                \
+    0,                     /* Use current configured reference clock for configuring baudrate. */ \
+    115200,                /* 115200 bits/s. */                                                   \
+    usartOVS16,            /* 16x oversampling. */                                                \
+    usartDatabits8,        /* 8 databits. */                                                      \
+    usartNoParity,         /* No parity. */                                                       \
+    usartStopbits1,        /* 1 stopbit. */                                                       \
+    usartHwFlowControlNone /* No HW flow control */                                               \
   }
+#endif
+#else
+#if defined(_USART_TIMING_CSHOLD_MASK) && defined(USART_CTRL_MVDIS)
+#define USART_INITASYNC_DEFAULT                                                                   \
+  {                                                                                               \
+    usartEnable,           /* Enable RX/TX when init completed. */                                \
+    0,                     /* Use current configured reference clock for configuring baudrate. */ \
+    115200,                /* 115200 bits/s. */                                                   \
+    usartOVS16,            /* 16x oversampling. */                                                \
+    usartDatabits8,        /* 8 databits. */                                                      \
+    usartNoParity,         /* No parity. */                                                       \
+    usartStopbits1,        /* 1 stopbit. */                                                       \
+    false,                 /* Do not disable majority vote. */                                    \
+    false,                 /* Not USART PRS input mode. */                                        \
+    usartPrsRxCh0,         /* PRS channel 0. */                                                   \
+    false,                 /* Auto CS functionality enable/disable switch */                      \
+    0,                     /* Auto CS Hold cycles */                                              \
+    0                      /* Auto CS Setup cycles */                                             \
+  }
+#elif defined(USART_INPUT_RXPRS) && defined(USART_CTRL_MVDIS)
+#define USART_INITASYNC_DEFAULT                                                                   \
+  {                                                                                               \
+    usartEnable,           /* Enable RX/TX when init completed. */                                \
+    0,                     /* Use current configured reference clock for configuring baudrate. */ \
+    115200,                /* 115200 bits/s. */                                                   \
+    usartOVS16,            /* 16x oversampling. */                                                \
+    usartDatabits8,        /* 8 databits. */                                                      \
+    usartNoParity,         /* No parity. */                                                       \
+    usartStopbits1,        /* 1 stopbit. */                                                       \
+    false,                 /* Do not disable majority vote. */                                    \
+    false,                 /* Not USART PRS input mode. */                                        \
+    usartPrsRxCh0          /* PRS channel 0. */                                                   \
+  }
+#else
+#define USART_INITASYNC_DEFAULT                                                                   \
+  {                                                                                               \
+    usartEnable,           /* Enable RX/TX when init completed. */                                \
+    0,                     /* Use current configured reference clock for configuring baudrate. */ \
+    115200,                /* 115200 bits/s. */                                                   \
+    usartOVS16,            /* 16x oversampling. */                                                \
+    usartDatabits8,        /* 8 databits. */                                                      \
+    usartNoParity,         /* No parity. */                                                       \
+    usartStopbits1         /* 1 stopbit. */                                                       \
+  }
+#endif
 #endif
 
 /** Default config for USART PRS triggering structure. */
@@ -509,6 +570,75 @@ typedef struct {
 } USART_InitIrDA_TypeDef;
 
 /** Default config for IrDA mode init structure. */
+#if defined(_USART_ROUTEPEN_RTSPEN_MASK) && defined(_USART_ROUTEPEN_CTSPEN_MASK)
+#if defined(_USART_TIMING_CSHOLD_MASK) && defined(USART_CTRL_MVDIS)
+#define USART_INITIRDA_DEFAULT                                                               \
+  {                                                                                          \
+    {                                                                                        \
+      usartEnable,    /* Enable RX/TX when init completed. */                                \
+      0,              /* Use current configured reference clock for configuring baudrate. */ \
+      115200,         /* 115200 bits/s. */                                                   \
+      usartOVS16,     /* 16x oversampling. */                                                \
+      usartDatabits8, /* 8 databits. */                                                      \
+      usartEvenParity,/* Even parity. */                                                     \
+      usartStopbits1, /* 1 stopbit. */                                                       \
+      false,          /* Do not disable majority vote. */                                    \
+      false,          /* Not USART PRS input mode. */                                        \
+      usartPrsRxCh0,  /* PRS channel 0. */                                                   \
+      false,          /* Auto CS functionality enable/disable switch */                      \
+      0,              /* Auto CS Hold cycles */                                              \
+      0,              /* Auto CS Setup cycles */                                             \
+      usartHwFlowControlNone /* No HW flow control */                                        \
+    },                                                                                       \
+    false,            /* Rx invert disabled. */                                              \
+    false,            /* Filtering disabled. */                                              \
+    usartIrDAPwTHREE, /* Pulse width is set to ONE. */                                       \
+    false,            /* Routing to PRS is disabled. */                                      \
+    usartIrDAPrsCh0   /* PRS channel 0. */                                                   \
+  }
+#elif defined(USART_INPUT_RXPRS) && defined(USART_CTRL_MVDIS)
+#define USART_INITIRDA_DEFAULT                                                               \
+  {                                                                                          \
+    {                                                                                        \
+      usartEnable,    /* Enable RX/TX when init completed. */                                \
+      0,              /* Use current configured reference clock for configuring baudrate. */ \
+      115200,         /* 115200 bits/s. */                                                   \
+      usartOVS16,     /* 16x oversampling. */                                                \
+      usartDatabits8, /* 8 databits. */                                                      \
+      usartEvenParity,/* Even parity. */                                                     \
+      usartStopbits1, /* 1 stopbit. */                                                       \
+      false,          /* Do not disable majority vote. */                                    \
+      false,          /* Not USART PRS input mode. */                                        \
+      usartPrsRxCh0,  /* PRS channel 0. */                                                   \
+      usartHwFlowControlNone /* No HW flow control */                                        \
+    },                                                                                       \
+    false,            /* Rx invert disabled. */                                              \
+    false,            /* Filtering disabled. */                                              \
+    usartIrDAPwTHREE, /* Pulse width is set to ONE. */                                       \
+    false,            /* Routing to PRS is disabled. */                                      \
+    usartIrDAPrsCh0   /* PRS channel 0. */                                                   \
+  }
+#else
+#define USART_INITIRDA_DEFAULT                                                               \
+  {                                                                                          \
+    {                                                                                        \
+      usartEnable,    /* Enable RX/TX when init completed. */                                \
+      0,              /* Use current configured reference clock for configuring baudrate. */ \
+      115200,         /* 115200 bits/s. */                                                   \
+      usartOVS16,     /* 16x oversampling. */                                                \
+      usartDatabits8, /* 8 databits. */                                                      \
+      usartEvenParity,/* Even parity. */                                                     \
+      usartStopbits1, /* 1 stopbit. */                                                       \
+      usartHwFlowControlNone /* No HW flow control */                                        \
+    },                                                                                       \
+    false,            /* Rx invert disabled. */                                              \
+    false,            /* Filtering disabled. */                                              \
+    usartIrDAPwTHREE, /* Pulse width is set to ONE. */                                       \
+    false,            /* Routing to PRS is disabled. */                                      \
+    usartIrDAPrsCh0   /* PRS channel 0. */                                                   \
+  }
+#endif
+#else
 #if defined(_USART_TIMING_CSHOLD_MASK) && defined(USART_CTRL_MVDIS)
 #define USART_INITIRDA_DEFAULT                                                               \
   {                                                                                          \
@@ -572,6 +702,7 @@ typedef struct {
     false,            /* Routing to PRS is disabled. */                                      \
     usartIrDAPrsCh0   /* PRS channel 0. */                                                   \
   }
+#endif
 #endif
 
 #if defined(_USART_I2SCTRL_MASK)

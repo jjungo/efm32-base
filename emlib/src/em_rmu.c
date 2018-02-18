@@ -2,10 +2,10 @@
  * @file em_rmu.c
  * @brief Reset Management Unit (RMU) peripheral module peripheral API
  *
- * @version 5.2.1
+ * @version 5.3.5
  *******************************************************************************
  * # License
- * <b>Copyright 2016 Silicon Laboratories, Inc. http://www.silabs.com</b>
+ * <b>Copyright 2016 Silicon Laboratories, Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * Permission is granted to anyone to use this software for any purpose,
@@ -198,7 +198,7 @@ static const RMU_ResetCauseMasks_Typedef  resetCauseMasks[NUM_RSTCAUSES] =
 #if defined(RMU_RSTCAUSE_BODAVDD1)
   { RMU_RSTCAUSE_BODAVDD1, RMU_RSTCAUSE_BODAVDD1_XMASK },
 #endif
-#if defined(BU_PRESENT)
+#if defined(BU_PRESENT) && defined(_SILICON_LABS_32B_SERIES_0)
   { RMU_RSTCAUSE_BUBODVDDDREG, RMU_RSTCAUSE_BUBODVDDDREG_XMASK },
   { RMU_RSTCAUSE_BUBODBUVIN, RMU_RSTCAUSE_BUBODBUVIN_XMASK },
   { RMU_RSTCAUSE_BUBODUNREG, RMU_RSTCAUSE_BUBODUNREG_XMASK },
@@ -324,6 +324,9 @@ uint32_t RMU_ResetCauseGet(void)
         /* Fallthrough */
         case RMU_RSTCAUSE_EM4RST:
           zeroXMask |= RMU_RSTCAUSE_EXTRST;
+          break;
+        default:
+          /* MISRA requires default case */
           break;
       }
     }

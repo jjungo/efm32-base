@@ -1,10 +1,10 @@
 /***************************************************************************//**
  * @file em_gpio.h
  * @brief General Purpose IO (GPIO) peripheral API
- * @version 5.2.1
+ * @version 5.3.5
  *******************************************************************************
  * # License
- * <b>Copyright 2016 Silicon Laboratories, Inc. http://www.silabs.com</b>
+ * <b>Copyright 2016 Silicon Laboratories, Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * Permission is granted to anyone to use this software for any purpose,
@@ -59,7 +59,8 @@ extern "C" {
  ******************************************************************************/
 
 /** @cond DO_NOT_INCLUDE_WITH_DOXYGEN */
-#if defined(_EFM32_TINY_FAMILY) || defined(_EFM32_ZERO_FAMILY)
+#if defined(_SILICON_LABS_32B_SERIES_0) \
+  && defined(_EFM32_TINY_FAMILY) || defined(_EFM32_ZERO_FAMILY)
 
 #define _GPIO_PORT_A_PIN_COUNT 14
 #define _GPIO_PORT_B_PIN_COUNT 10
@@ -169,7 +170,7 @@ extern "C" {
 #define _GPIO_PORT_A_PIN_COUNT 6
 #define _GPIO_PORT_B_PIN_COUNT 5
 #define _GPIO_PORT_C_PIN_COUNT 6
-#define _GPIO_PORT_D_PIN_COUNT 6
+#define _GPIO_PORT_D_PIN_COUNT 7
 #define _GPIO_PORT_E_PIN_COUNT 0
 #define _GPIO_PORT_F_PIN_COUNT 8
 #define _GPIO_PORT_G_PIN_COUNT 0
@@ -181,7 +182,7 @@ extern "C" {
 #define _GPIO_PORT_A_PIN_MASK 0x003F
 #define _GPIO_PORT_B_PIN_MASK 0xF800
 #define _GPIO_PORT_C_PIN_MASK 0x0FC0
-#define _GPIO_PORT_D_PIN_MASK 0xFC00
+#define _GPIO_PORT_D_PIN_MASK 0xFE00
 #define _GPIO_PORT_E_PIN_MASK 0x0000
 #define _GPIO_PORT_F_PIN_MASK 0x00FF
 #define _GPIO_PORT_G_PIN_MASK 0x0000
@@ -320,6 +321,32 @@ extern "C" {
 #define _GPIO_PORT_J_PIN_MASK 0x0000
 #define _GPIO_PORT_K_PIN_MASK 0x0000
 
+#elif defined(_SILICON_LABS_GECKO_INTERNAL_SDID_103)
+
+#define _GPIO_PORT_A_PIN_COUNT 14
+#define _GPIO_PORT_B_PIN_COUNT 10
+#define _GPIO_PORT_C_PIN_COUNT 16
+#define _GPIO_PORT_D_PIN_COUNT 9
+#define _GPIO_PORT_E_PIN_COUNT 12
+#define _GPIO_PORT_F_PIN_COUNT 6
+#define _GPIO_PORT_G_PIN_COUNT 0
+#define _GPIO_PORT_H_PIN_COUNT 0
+#define _GPIO_PORT_I_PIN_COUNT 0
+#define _GPIO_PORT_J_PIN_COUNT 0
+#define _GPIO_PORT_K_PIN_COUNT 0
+
+#define _GPIO_PORT_A_PIN_MASK 0xF77F
+#define _GPIO_PORT_B_PIN_MASK 0x79F8
+#define _GPIO_PORT_C_PIN_MASK 0xFFFF
+#define _GPIO_PORT_D_PIN_MASK 0x01FF
+#define _GPIO_PORT_E_PIN_MASK 0xFFF0
+#define _GPIO_PORT_F_PIN_MASK 0x003F
+#define _GPIO_PORT_G_PIN_MASK 0x0000
+#define _GPIO_PORT_H_PIN_MASK 0x0000
+#define _GPIO_PORT_I_PIN_MASK 0x0000
+#define _GPIO_PORT_J_PIN_MASK 0x0000
+#define _GPIO_PORT_K_PIN_MASK 0x0000
+
 #else
 #warning "Port and pin masks are not defined for this family."
 #endif
@@ -358,9 +385,9 @@ extern "C" {
 
 #if defined(_GPIO_EXTIPINSELL_MASK)
 /** Validation of interrupt number and pin */
-#define GPIO_INTNO_PIN_VALID(intNo, pin)         \
-  ((intNo & ~_GPIO_EXTIPINSELL_EXTIPINSEL0_MASK) \
-   == (pin & ~_GPIO_EXTIPINSELL_EXTIPINSEL0_MASK))
+#define GPIO_INTNO_PIN_VALID(intNo, pin)           \
+  (((intNo) & ~_GPIO_EXTIPINSELL_EXTIPINSEL0_MASK) \
+   == ((pin) & ~_GPIO_EXTIPINSELL_EXTIPINSEL0_MASK))
 #endif
 
 /** Highest GPIO pin number */
@@ -579,7 +606,7 @@ __STATIC_INLINE void GPIO_DbgSWDIOEnable(bool enable)
  * @note
  *   Enabling this pin is not sufficient to fully enable serial wire output
  *   which is also dependent on issues outside the GPIO module. Please refer to
- *   DBG_SWOEnable().
+ *   @ref DBG_SWOEnable().
  *
  * @param[in] enable
  *   @li false - disable serial wire viewer pin (default after reset).
@@ -652,7 +679,7 @@ __STATIC_INLINE uint32_t GPIO_EM4GetPinWakeupCause(void)
  *   pull direction in EM4.
  *
  * @note
- *   For platform 2 parts, EMU_EM4Init() and EMU_UnlatchPinRetention() offers
+ *   For platform 2 parts, @ref EMU_EM4Init() and @ref EMU_UnlatchPinRetention() offers
  *   more pin retention features. This function implements the EM4EXIT retention
  *   mode on platform 2.
  *
@@ -738,7 +765,7 @@ __STATIC_INLINE void GPIO_IntDisable(uint32_t flags)
  *
  * @note
  *   Depending on the use, a pending interrupt may already be set prior to
- *   enabling the interrupt. Consider using GPIO_IntClear() prior to enabling
+ *   enabling the interrupt. Consider using @ref GPIO_IntClear() prior to enabling
  *   if such a pending interrupt should be ignored.
  *
  * @param[in] flags
@@ -1111,7 +1138,7 @@ __STATIC_INLINE void GPIO_Unlock(void)
  *
  * @details
  *   If reconfiguring a GPIO interrupt that is already enabled, it is generally
- *   recommended to disable it first, see GPIO_Disable().
+ *   recommended to disable it first, see @ref GPIO_Disable().
  *
  *   The actual GPIO interrupt handler must be in place before enabling the
  *   interrupt.
@@ -1143,7 +1170,7 @@ __STATIC_INLINE void GPIO_Unlock(void)
  *
  * @param[in] enable
  *   Set to true if interrupt shall be enabled after configuration completed,
- *   false to leave disabled. See GPIO_IntDisable() and GPIO_IntEnable().
+ *   false to leave disabled. See @ref GPIO_IntDisable() and @ref GPIO_IntEnable().
  ******************************************************************************/
 __STATIC_INLINE void GPIO_IntConfig(GPIO_Port_TypeDef port,
                                     unsigned int pin,

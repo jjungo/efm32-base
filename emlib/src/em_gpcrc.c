@@ -1,10 +1,10 @@
 /***************************************************************************//**
  * @file
  * @brief General Purpose Cyclic Redundancy Check (GPCRC) API.
- * @version 5.2.1
+ * @version 5.3.5
  *******************************************************************************
  * # License
- * <b>Copyright 2016 Silicon Laboratories, Inc. http://www.silabs.com</b>
+ * <b>Copyright 2016 Silicon Laboratories, Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * Permission is granted to anyone to use this software for any purpose,
@@ -30,6 +30,7 @@
  *
  ******************************************************************************/
 
+#include "em_common.h"
 #include "em_gpcrc.h"
 #include "em_assert.h"
 
@@ -73,6 +74,7 @@
 void GPCRC_Init(GPCRC_TypeDef * gpcrc, const GPCRC_Init_TypeDef * init)
 {
   uint32_t polySelect;
+  uint32_t revPoly = 0;
 
   if (init->crcPoly == 0x04C11DB7) {
     polySelect = GPCRC_CTRL_POLYSEL_CRC32;
@@ -80,6 +82,7 @@ void GPCRC_Init(GPCRC_TypeDef * gpcrc, const GPCRC_Init_TypeDef * init)
     // If not using the fixed CRC-32 polynomial then we must be using 16-bit
     EFM_ASSERT((init->crcPoly & 0xFFFF0000) == 0);
     polySelect = GPCRC_CTRL_POLYSEL_16;
+    revPoly = SL_RBIT16(init->crcPoly);
   }
 
   gpcrc->CTRL = (((uint32_t)init->autoInit << _GPCRC_CTRL_AUTOINIT_SHIFT)
@@ -91,7 +94,6 @@ void GPCRC_Init(GPCRC_TypeDef * gpcrc, const GPCRC_Init_TypeDef * init)
 
   if (polySelect == GPCRC_CTRL_POLYSEL_16) {
     // Set CRC polynomial value
-    uint32_t revPoly = __RBIT(init->crcPoly) >> 16;
     gpcrc->POLY = revPoly & _GPCRC_POLY_POLY_MASK;
   }
 

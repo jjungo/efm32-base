@@ -1,20 +1,22 @@
 /***************************************************************************//**
  * @file hal_efr.c
  * @brief This file contains EFR32 specific HAL code to handle chip startup.
- * @copyright Copyright 2015 Silicon Laboratories, Inc. http://www.silabs.com
+ * @copyright Copyright 2015 Silicon Laboratories, Inc. www.silabs.com
  ******************************************************************************/
 
 #include <stdint.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "em_device.h"
 #include "em_cmu.h"
 #include "em_emu.h"
 #include "bsp.h"
+#include "bsp_init.h"
 #include "em_chip.h"
-#include "pti.h"
-#include "pa.h"
 
+#include "rail.h"
+#include "rail_chip_specific.h"
 #include "rail_config.h"
 #include "hal_common.h"
 
@@ -22,43 +24,55 @@ static void boardDisableSpiFlash(void);
 static void boardLowPowerInit(void);
 static void usecDelay(uint32_t usecs);
 
+#ifdef RAIL_PA_CONVERSIONS
+#include RAIL_PA_CONVERSIONS
+
+#if HAL_PA_VOLTAGE == 3300
+RAIL_DECLARE_TX_POWER_VBAT_CURVES(piecewiseSegments, curvesSg, curves24Hp, curves24Lp);
+#else
+RAIL_DECLARE_TX_POWER_DCDC_CURVES(piecewiseSegments, curvesSg, curves24Hp, curves24Lp);
+#endif
+#endif
+
 void halInitChipSpecific(void)
 {
-  CMU_HFXOInit_TypeDef hfxoInit = CMU_HFXOINIT_WSTK_DEFAULT;
-  RADIO_PTIInit_t ptiInit = RADIO_PTI_INIT;
-  RADIO_PAInit_t paInit;
+  BSP_initDevice();
 
-  // Init DCDC regulator and HFXO with WSTK radio board specific parameters
-  // from s025_sw\kits\SLWSTK6100A_EFR32MG\config\bspconfig.h
-#ifdef EMU_DCDCINIT_WSTK_DEFAULT
-  EMU_DCDCInit_TypeDef dcdcInit = EMU_DCDCINIT_WSTK_DEFAULT;
-  EMU_DCDCInit(&dcdcInit);
+  BSP_initBoard();
+
+#if HAL_PTI_ENABLE
+  RAIL_PtiConfig_t railPtiConfig = {
+#if HAL_PTI_MODE == HAL_PTI_MODE_SPI
+    .mode = RAIL_PTI_MODE_SPI,
+#elif HAL_PTI_MODE == HAL_PTI_MODE_UART
+    .mode = RAIL_PTI_MODE_UART,
+#elif HAL_PTI_MODE == HAL_PTI_MODE_UART_ONEWIRE
+    .mode = RAIL_PTI_MODE_UART_ONEWIRE,
 #else
-  EMU_DCDCPowerOff();
+    .mode = RAIL_PTI_MODE_DISABLED,
 #endif
-  CMU_HFXOInit(&hfxoInit);
-  SystemHFXOClockSet(RADIO_CONFIG_XTAL_FREQUENCY);
+    .baud = HAL_PTI_BAUD_RATE,
+    .doutLoc = BSP_PTI_DOUT_LOC,
+    .doutPort = BSP_PTI_DOUT_PORT,
+    .doutPin = BSP_PTI_DOUT_PIN,
+#ifdef BSP_PTI_DCLK_LOC
+    .dclkLoc = BSP_PTI_DCLK_LOC,
+    .dclkPort = BSP_PTI_DCLK_PORT,
+    .dclkPin = BSP_PTI_DCLK_PIN,
+#endif
+    .dframeLoc = BSP_PTI_DFRAME_LOC,
+    .dframePort = BSP_PTI_DFRAME_PORT,
+    .dframePin = BSP_PTI_DFRAME_PIN
+  };
 
-  // Initialize the Packet Trace Interface (PTI) to match the configuration in
-  // the board header
-  RADIO_PTI_Init(&ptiInit);
+  RAIL_ConfigPti(RAIL_EFR32_HANDLE, &railPtiConfig);
+#endif // HAL_PTI_ENABLE
 
-  /* Switch HFCLK to HFXO and disable HFRCO */
-  CMU_ClockSelectSet(cmuClock_HF, cmuSelect_HFXO);
-  CMU_OscillatorEnable(cmuOsc_HFRCO, false, false);
-
-  // Initialize the PA now that the HFXO is up and the timing is correct
-  #if (RADIO_CONFIG_BASE_FREQUENCY < 1000000000UL)
-  paInit = (RADIO_PAInit_t) RADIO_PA_SUBGIG_INIT;
-  #else
-  paInit = (RADIO_PAInit_t) RADIO_PA_2P4_INIT;
+  // Only create and save the curves if the customer wants them
+  #ifdef RAIL_PA_CONVERSIONS
+  RAIL_TxPowerCurvesConfig_t txPowerCurvesConfig = { curves24Hp, curvesSg, curves24Lp, piecewiseSegments };
+  RAIL_InitTxPowerCurves(&txPowerCurvesConfig);
   #endif
-
-  if (!RADIO_PA_Init(&paInit)) {
-    // Error: The PA could not be initialized due to an improper configuration.
-    // Please ensure your configuration is valid for the selected part.
-    while (1) ;
-  }
 
   /* Initialize other chip clocks, choose the best available clock source in this order:
         LFXO    - Crystal
@@ -165,8 +179,8 @@ static const USART_InitSync_TypeDef usartInit =
 static void boardDisableSpiFlash(void)
 {
   // Enable clocks needed for using the USART
+  // cmuClock_GPIO is enabled by BSP_initBoard above
   CMU_ClockEnable(cmuClock_HFPER, true);
-  CMU_ClockEnable(cmuClock_GPIO, true);
   CMU_ClockEnable(cmuClock_USART1, true);
 
   USART_InitSync(USART1, &usartInit);
@@ -221,14 +235,10 @@ static void usecDelay(uint32_t usecs)
 // Create defines for the different PRS signal sources as they vary per chip
 #if _SILICON_LABS_32B_SERIES_1_CONFIG == 1
 // Defines for EFR32xG1 chips
-#define _PRS_CH_CTRL_SOURCESEL_RAC     0x00000020UL
 #define _PRS_CH_CTRL_SOURCESEL_FRC     0x00000025UL
-#define _PRS_CH_CTRL_SOURCESEL_MODEML  0x00000026UL
 #else
 // Defines for EFR32xG12 and newer chips
-#define _PRS_CH_CTRL_SOURCESEL_RAC     0x00000051UL
 #define _PRS_CH_CTRL_SOURCESEL_FRC     0x00000055UL
-#define _PRS_CH_CTRL_SOURCESEL_MODEML  0x00000056UL
 #endif
 
 /**
@@ -243,8 +253,8 @@ static const debugSignal_t debugSignals[] =
     .isPrs = true,
     .loc = {
       .prs = {
-        .signal = 0x02,
-        .source = _PRS_CH_CTRL_SOURCESEL_RAC
+        .signal = (PRS_RAC_RX & _PRS_CH_CTRL_SIGSEL_MASK) >> _PRS_CH_CTRL_SIGSEL_SHIFT,
+        .source = (PRS_RAC_RX & _PRS_CH_CTRL_SOURCESEL_MASK) >> _PRS_CH_CTRL_SOURCESEL_SHIFT,
       }
     }
   },
@@ -253,8 +263,8 @@ static const debugSignal_t debugSignals[] =
     .isPrs = true,
     .loc = {
       .prs = {
-        .signal = 0x01,
-        .source = _PRS_CH_CTRL_SOURCESEL_RAC
+        .signal = (PRS_RAC_TX & _PRS_CH_CTRL_SIGSEL_MASK) >> _PRS_CH_CTRL_SIGSEL_SHIFT,
+        .source = (PRS_RAC_TX & _PRS_CH_CTRL_SOURCESEL_MASK) >> _PRS_CH_CTRL_SOURCESEL_SHIFT,
       }
     }
   },
@@ -263,8 +273,8 @@ static const debugSignal_t debugSignals[] =
     .isPrs = true,
     .loc = {
       .prs = {
-        .signal = 0x03,
-        .source = _PRS_CH_CTRL_SOURCESEL_RAC
+        .signal = (PRS_RAC_LNAEN & _PRS_CH_CTRL_SIGSEL_MASK) >> _PRS_CH_CTRL_SIGSEL_SHIFT,
+        .source = (PRS_RAC_LNAEN & _PRS_CH_CTRL_SOURCESEL_MASK) >> _PRS_CH_CTRL_SOURCESEL_SHIFT,
       }
     }
   },
@@ -273,8 +283,8 @@ static const debugSignal_t debugSignals[] =
     .isPrs = true,
     .loc = {
       .prs = {
-        .signal = 0x04,
-        .source = _PRS_CH_CTRL_SOURCESEL_RAC
+        .signal = (PRS_RAC_PAEN & _PRS_CH_CTRL_SIGSEL_MASK) >> _PRS_CH_CTRL_SIGSEL_SHIFT,
+        .source = (PRS_RAC_PAEN & _PRS_CH_CTRL_SOURCESEL_MASK) >> _PRS_CH_CTRL_SOURCESEL_SHIFT,
       }
     }
   },
@@ -285,6 +295,56 @@ static const debugSignal_t debugSignals[] =
       .prs = {
         .signal = 0x00,
         .source = _PRS_CH_CTRL_SOURCESEL_FRC
+      }
+    }
+  },
+  {
+    .name = "FRAMEDETECT",
+    .isPrs = true,
+    .loc = {
+      .prs = {
+        .signal = (PRS_MODEM_FRAMEDET & _PRS_CH_CTRL_SIGSEL_MASK) >> _PRS_CH_CTRL_SIGSEL_SHIFT,
+        .source = (PRS_MODEM_FRAMEDET & _PRS_CH_CTRL_SOURCESEL_MASK) >> _PRS_CH_CTRL_SOURCESEL_SHIFT,
+      }
+    }
+  },
+  {
+    .name = "PREAMBLEDETECT",
+    .isPrs = true,
+    .loc = {
+      .prs = {
+        .signal = (PRS_MODEM_PREDET & _PRS_CH_CTRL_SIGSEL_MASK) >> _PRS_CH_CTRL_SIGSEL_SHIFT,
+        .source = (PRS_MODEM_PREDET & _PRS_CH_CTRL_SOURCESEL_MASK) >> _PRS_CH_CTRL_SOURCESEL_SHIFT,
+      }
+    }
+  },
+  {
+    .name = "TIMINGDETECT",
+    .isPrs = true,
+    .loc = {
+      .prs = {
+        .signal = (PRS_MODEM_TIMDET & _PRS_CH_CTRL_SIGSEL_MASK) >> _PRS_CH_CTRL_SIGSEL_SHIFT,
+        .source = (PRS_MODEM_TIMDET & _PRS_CH_CTRL_SOURCESEL_MASK) >> _PRS_CH_CTRL_SOURCESEL_SHIFT,
+      }
+    }
+  },
+  {
+    .name = "FRAMESENT",
+    .isPrs = true,
+    .loc = {
+      .prs = {
+        .signal = (PRS_MODEM_FRAMESENT & _PRS_CH_CTRL_SIGSEL_MASK) >> _PRS_CH_CTRL_SIGSEL_SHIFT,
+        .source = (PRS_MODEM_FRAMESENT & _PRS_CH_CTRL_SOURCESEL_MASK) >> _PRS_CH_CTRL_SOURCESEL_SHIFT,
+      }
+    }
+  },
+  {
+    .name = "SYNCSENT",
+    .isPrs = true,
+    .loc = {
+      .prs = {
+        .signal = (PRS_MODEM_SYNCSENT & _PRS_CH_CTRL_SIGSEL_MASK) >> _PRS_CH_CTRL_SIGSEL_SHIFT,
+        .source = (PRS_MODEM_SYNCSENT & _PRS_CH_CTRL_SOURCESEL_MASK) >> _PRS_CH_CTRL_SOURCESEL_SHIFT,
       }
     }
   },
@@ -302,81 +362,81 @@ const debugSignal_t* halGetDebugSignals(uint32_t *size)
  * Define the pins that are supported for debugging on the EFR32. This includes
  * PF2, PF3, PF4, PF5, PC10, and PC11. Along with these pins there are specific
  * PRS channels that will be used to output debug information on these pins.
- * This is allo for debug and very specific to the EFR32.
+ * This is all for debug and very specific to the EFR32.
  */
 static const debugPin_t debugPins[] = {
   {
-    .name = "PC10", // Dumbo/Jumbo/Nerio - EXP_HEADER15, WSTK_P12
+    .name = "PC10", // EFR32xG1/EFR32xG12/EFR32xG13 - EXP_HEADER15, WSTK_P12
     .prsChannel = 9, // PRS 0/12 9/15 10/4 11/3
     .prsLocation = 15,
     .gpioPort = gpioPortC,
     .gpioPin = 10
   },
   {
-    .name = "PC11", // Dumbo/Jumbo/Nerio - EXP_HEADER16, WSTK_P13
+    .name = "PC11", // EFR32xG1/EFR32xG12/EFR32xG13 - EXP_HEADER16, WSTK_P13
     .prsChannel = 10, // PRS 0/13 9/16 10/5 11/4
     .prsLocation = 5,
     .gpioPort = gpioPortC,
     .gpioPin = 11
   },
   {
-    .name = "PF2", // Dumbo/Nerio - WSTK_P28 (SWO)
+    .name = "PF2", // EFR32xG1/EFR32xG13 - WSTK_P28 (SWO)
     .prsChannel = 0, // PRS 0/2 1/1 2/0 3/7
     .prsLocation = 2,
     .gpioPort = gpioPortF,
     .gpioPin = 2
   },
   {
-    .name = "PF3", // Dumbo/Nerio - EXP_HEADER13, WSTK_10 (TDI) [Jumbo PC9]
+    .name = "PF3", // EFR32xG1/EFR32xG13 - EXP_HEADER13, WSTK_10 (TDI) [EFR32xG12 PC9]
     .prsChannel = 1, // PRS 0/3 1/2 2/1 3/0
     .prsLocation = 2,
     .gpioPort = gpioPortF,
     .gpioPin = 3
   },
   {
-    .name = "PF4", // Dumbo/Nerio - EXP_HEADER11, WSTK_P8 (LED0) [Jumbo PD12]
+    .name = "PF4", // EFR32xG1/EFR32xG13 - EXP_HEADER11, WSTK_P8 (LED0) [EFR32xG12 PD12]
     .prsChannel = 2, // PRS 0/4 1/3 2/2 3/1
     .prsLocation = 2,
     .gpioPort = gpioPortF,
     .gpioPin = 4
   },
   {
-    .name = "PF5", // Dumbo/Nerio - WSTK_P32 (LED1)
+    .name = "PF5", // EFR32xG1/EFR32xG13 - WSTK_P32 (LED1)
     .prsChannel = 3, // PRS 0/5 1/4 2/3 3/2
     .prsLocation = 2,
     .gpioPort = gpioPortF,
     .gpioPin = 5
   },
   {
-    .name = "PC9", // Jumbo - EXP_HEADER13, WSTK_P10 [Dumbo/Nerio PF3]
+    .name = "PC9", // EFR32xG12 - EXP_HEADER13, WSTK_P10 [EFR32xG1/EFR32xG13 PF3]
     .prsChannel = 11, // PRS 0/11 9/14 10/3 11/2
     .prsLocation = 2,
     .gpioPort = gpioPortC,
     .gpioPin = 9
   },
   {
-    .name = "PD9", // Jumbo - EXP_HEADER5, WSTK_P2 [Dumbo/Nerio PA3 (VCOM_CTS)]
+    .name = "PD9", // EFR32xG12 - EXP_HEADER5, WSTK_P2 [EFR32xG1/EFR32xG13 PA3 (VCOM_CTS)]
     .prsChannel = 3, // PRS 3/8 4/0 5/6 6/11
     .prsLocation = 8,
     .gpioPort = gpioPortD,
     .gpioPin = 9
   },
   {
-    .name = "PD10", // Jumbo - EXP_HEADER7, WSTK_P4 [Dumbo/Nerio PF6 (BUTTON0)]
+    .name = "PD10", // EFR32xG12 - EXP_HEADER7, WSTK_P4 [EFR32xG1/EFR32xG13 PF6 (BUTTON0)]
     .prsChannel = 4, // PRS 3/9 4/1 5/0 6/12
     .prsLocation = 1,
     .gpioPort = gpioPortD,
     .gpioPin = 10
   },
   {
-    .name = "PD11", // Jumbo - EXP_HEADER9, WSTK_P6 [Dumbo/Nerio PF7 (BUTTON1)]
+    .name = "PD11", // EFR32xG12 - EXP_HEADER9, WSTK_P6 [EFR32xG1/EFR32xG13 PF7 (BUTTON1)]
     .prsChannel = 5, // PRS 3/10 4/2 5/1 6/13
     .prsLocation = 1,
     .gpioPort = gpioPortD,
     .gpioPin = 11
   },
   {
-    .name = "PD12", // Jumbo - EXP_HEADER11, WSTK_P8 [Dumbo/Nerio PF4 (LED0)]
+    .name = "PD12", // EFR32xG12 - EXP_HEADER11, WSTK_P8 [EFR32xG1/EFR32xG13 PF4 (LED0)]
     .prsChannel = 6, // PRS 3/11 4/3 5/2 6/14
     .prsLocation = 14,
     .gpioPort = gpioPortD,
@@ -418,8 +478,8 @@ void halEnablePrs(uint8_t channel, uint8_t loc, uint8_t source, uint8_t signal)
 
   // Configure the output location for this PRS channel
   routeLocPtr   = &PRS->ROUTELOC0 + (channel / 4);
-  *routeLocPtr &= ~(0xFF << (_PRS_ROUTELOC0_CH1LOC_SHIFT
-                             * (channel % 4)));
+  *routeLocPtr &= ~(0xFFUL << (_PRS_ROUTELOC0_CH1LOC_SHIFT
+                               * (channel % 4)));
   *routeLocPtr |= loc << (_PRS_ROUTELOC0_CH1LOC_SHIFT
                           * (channel % 4));
 

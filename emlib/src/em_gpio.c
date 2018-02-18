@@ -2,10 +2,10 @@
  * @file em_gpio.c
  * @brief General Purpose IO (GPIO) peripheral API
  *   devices.
- * @version 5.2.1
+ * @version 5.3.5
  *******************************************************************************
  * # License
- * <b>Copyright 2016 Silicon Laboratories, Inc. http://www.silabs.com</b>
+ * <b>Copyright 2016 Silicon Laboratories, Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * Permission is granted to anyone to use this software for any purpose,
@@ -85,6 +85,11 @@ void GPIO_DbgLocationSet(unsigned int location)
 
   GPIO->ROUTE = (GPIO->ROUTE & ~_GPIO_ROUTE_SWLOCATION_MASK)
                 | (location << _GPIO_ROUTE_SWLOCATION_SHIFT);
+#elif defined (_GPIO_ROUTELOC0_SWVLOC_MASK)
+  EFM_ASSERT(location < AFCHANLOC_MAX);
+
+  GPIO->ROUTELOC0 = (GPIO->ROUTELOC0 & ~_GPIO_ROUTELOC0_SWVLOC_MASK)
+                    | (location << _GPIO_ROUTELOC0_SWVLOC_SHIFT);
 #else
   (void)location;
 #endif
@@ -136,8 +141,8 @@ void GPIO_DriveStrengthSet(GPIO_Port_TypeDef port,
  *   Configure GPIO external pin interrupt.
  *
  * @details
- *   If reconfiguring a GPIO interrupt that is already enabled, it is generally
- *   recommended to disable it first, see GPIO_Disable().
+ *   It is recommended to disable interrupts before configuring a GPIO pin interrupt.
+ *   See @ref GPIO_IntDisable() for more information.
  *
  *   The actual GPIO interrupt handler must be in place before enabling the
  *   interrupt.
@@ -152,10 +157,10 @@ void GPIO_DriveStrengthSet(GPIO_Port_TypeDef port,
  *   On series 1 devices, pin number can be selected freely within a group.
  *   Interrupt numbers are divided into 4 groups (intNo / 4) and valid pin
  *   number within the interrupt groups are:
- *       0: pins 0-3
- *       1: pins 4-7
- *       2: pins 8-11
- *       3: pins 12-15
+ *       0: pins 0-3   (interrupt number 0-3)
+ *       1: pins 4-7   (interrupt number 4-7)
+ *       2: pins 8-11  (interrupt number 8-11)
+ *       3: pins 12-15 (interrupt number 12-15)
  *
  * @param[in] port
  *   The port to associate with @p pin.
@@ -174,7 +179,7 @@ void GPIO_DriveStrengthSet(GPIO_Port_TypeDef port,
  *
  * @param[in] enable
  *   Set to true if interrupt shall be enabled after configuration completed,
- *   false to leave disabled. See GPIO_IntDisable() and GPIO_IntEnable().
+ *   false to leave disabled. See @ref GPIO_IntDisable() and @ref GPIO_IntEnable().
  ******************************************************************************/
 void GPIO_ExtIntConfig(GPIO_Port_TypeDef port,
                        unsigned int pin,

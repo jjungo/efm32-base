@@ -1,4 +1,29 @@
 ================ Revision history ============================================
+5.3.5:
+ - No changes.
+
+5.3.4:
+ - Changes to move code towards MISRAC 2012 compliance.
+
+5.3.3:
+ - No changes.
+
+5.3.2:
+ - No changes.
+
+5.3.1:
+ - SLEEP: Only doing clock save/restore when going into EM2 or EM3.
+
+5.3.0:
+ - SLEEP: Added possibility for controlling sleep entry from the sleep callback
+ - SLEEP: Added new callback for advanced application control of HF clock
+   restore on energy mode wakeup.
+ - SLEEP: Added new init function SLEEP_InitEx() and deprecated
+   SLEEP_Init().
+
+5.2.2:
+ - No changes.
+
 5.2.1:
  - RTCDRV: Added support for PLFRCO.
 

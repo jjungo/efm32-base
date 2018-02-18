@@ -6,7 +6,6 @@ builds/
 *.o
 *.so
 *.lib
-*.a
 
 # CTags
 *tags

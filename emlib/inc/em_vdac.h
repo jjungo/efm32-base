@@ -1,10 +1,10 @@
 /***************************************************************************//**
  * @file em_vdac.h
  * @brief Digital to Analog Converter (VDAC) peripheral API
- * @version 5.2.1
+ * @version 5.3.5
  *******************************************************************************
  * # License
- * <b>Copyright 2016 Silicon Laboratories, Inc. http://www.silabs.com</b>
+ * <b>Copyright 2016 Silicon Laboratories, Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * Permission is granted to anyone to use this software for any purpose,
@@ -129,10 +129,18 @@ typedef enum {
   vdacPrsSelCh5 =  _VDAC_CH0CTRL_PRSSEL_PRSCH5,  /**< PRS ch 5 triggers conversion. */
   vdacPrsSelCh6 =  _VDAC_CH0CTRL_PRSSEL_PRSCH6,  /**< PRS ch 6 triggers conversion. */
   vdacPrsSelCh7 =  _VDAC_CH0CTRL_PRSSEL_PRSCH7,  /**< PRS ch 7 triggers conversion. */
+#if defined(_VDAC_CH0CTRL_PRSSEL_PRSCH8)
   vdacPrsSelCh8 =  _VDAC_CH0CTRL_PRSSEL_PRSCH8,  /**< PRS ch 8 triggers conversion. */
+#endif
+#if defined(_VDAC_CH0CTRL_PRSSEL_PRSCH9)
   vdacPrsSelCh9 =  _VDAC_CH0CTRL_PRSSEL_PRSCH9,  /**< PRS ch 9 triggers conversion. */
+#endif
+#if defined(_VDAC_CH0CTRL_PRSSEL_PRSCH10)
   vdacPrsSelCh10 = _VDAC_CH0CTRL_PRSSEL_PRSCH10, /**< PRS ch 10 triggers conversion. */
+#endif
+#if defined(_VDAC_CH0CTRL_PRSSEL_PRSCH11)
   vdacPrsSelCh11 = _VDAC_CH0CTRL_PRSSEL_PRSCH11, /**< PRS ch 11 triggers conversion. */
+#endif
 } VDAC_PrsSel_TypeDef;
 
 /** Channel conversion trigger mode. */

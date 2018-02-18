@@ -1,10 +1,10 @@
 /***************************************************************************//**
  * @file rtcdriver.c
  * @brief RTCDRV timer API implementation.
- * @version 5.2.1
+ * @version 5.3.5
  *******************************************************************************
  * # License
- * <b>(C) Copyright 2014 Silicon Labs, http://www.silabs.com</b>
+ * <b>(C) Copyright 2014 Silicon Labs, www.silabs.com</b>
  *******************************************************************************
  *
  * This file is licensed under the Silabs License Agreement. See the file
@@ -1126,6 +1126,12 @@ static void rescheduleRtc(uint32_t rtcCnt)
    In addition to the timers, RTCDRV also offers an optional wallclock
    functionality. The wallclock keeps track of the number of seconds elapsed
    since RTCDRV was initialized.
+
+   RTCDRV resolution is 1 ms with 244 us accuracy. On the EFM32G family (classic
+   Gecko's) the accuracy is 61 us.
+   Since RTCDRV is interrupt driven using the default RTC interrupt priority
+   level, timeout accuracy will be affected by the interrupt latency of the
+   system.
 
    @n @section rtcdrv_conf Configuration Options
 

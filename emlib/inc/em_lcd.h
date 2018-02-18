@@ -1,10 +1,10 @@
 /***************************************************************************//**
  * @file em_lcd.h
  * @brief Liquid Crystal Display (LCD) peripheral API
- * @version 5.2.1
+ * @version 5.3.5
  *******************************************************************************
  * # License
- * <b>Copyright 2016 Silicon Laboratories, Inc. http://www.silabs.com</b>
+ * <b>Copyright 2016 Silicon Laboratories, Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * Permission is granted to anyone to use this software for any purpose,
@@ -43,9 +43,6 @@
 extern "C" {
 #endif
 
-/* LCD is not supported for EFM32GG11 in this release. */
-#if !defined(_SILICON_LABS_GECKO_INTERNAL_SDID_100)
-
 /***************************************************************************//**
  * @addtogroup emlib
  * @{
@@ -55,6 +52,13 @@ extern "C" {
  * @addtogroup LCD
  * @{
  ******************************************************************************/
+
+/*******************************************************************************
+ ********************************   DEFINES   **********************************
+ ******************************************************************************/
+
+#define LCD_DEFAULT_FRAME_RATE_DIV  4
+#define LCD_DEFAULT_CONTRAST        15
 
 /*******************************************************************************
  ********************************   ENUMS   ************************************
@@ -75,8 +79,21 @@ typedef enum {
   lcdMuxSextaplex  = LCD_DISPCTRL_MUXE_MUXE | LCD_DISPCTRL_MUX_DUPLEX,
   /** Octaplex / 1/6 Duty cycle (segments can be multiplexed with LCD_COM[0:5]) */
   lcdMuxOctaplex   = LCD_DISPCTRL_MUXE_MUXE | LCD_DISPCTRL_MUX_QUADRUPLEX
+#elif defined(LCD_DISPCTRL_MUX_SEXTAPLEX)
+  /** Sextaplex / 1/6 Duty cycle (segments can be multiplexed with LCD_COM[0:5]) */
+  lcdMuxSextaplex  = LCD_DISPCTRL_MUX_SEXTAPLEX,
+  /** Octaplex / 1/6 Duty cycle (segments can be multiplexed with LCD_COM[0:5]) */
+  lcdMuxOctaplex   = LCD_DISPCTRL_MUX_OCTAPLEX,
 #endif
 } LCD_Mux_TypeDef;
+
+/** Wave type */
+typedef enum {
+  /** Low power optimized waveform output */
+  lcdWaveLowPower = LCD_DISPCTRL_WAVE_LOWPOWER,
+  /** Regular waveform output */
+  lcdWaveNormal   = LCD_DISPCTRL_WAVE_NORMAL
+} LCD_Wave_TypeDef;
 
 /** Bias setting */
 typedef enum {
@@ -92,14 +109,7 @@ typedef enum {
 #endif
 } LCD_Bias_TypeDef;
 
-/** Wave type */
-typedef enum {
-  /** Low power optimized waveform output */
-  lcdWaveLowPower = LCD_DISPCTRL_WAVE_LOWPOWER,
-  /** Regular waveform output */
-  lcdWaveNormal   = LCD_DISPCTRL_WAVE_NORMAL
-} LCD_Wave_TypeDef;
-
+#if defined(_SILICON_LABS_32B_SERIES_0)
 /** VLCD Voltage Source */
 typedef enum {
   /** VLCD Powered by VDD */
@@ -107,15 +117,19 @@ typedef enum {
   /** VLCD Powered by external VDD / Voltage Boost */
   lcdVLCDSelVExtBoost = LCD_DISPCTRL_VLCDSEL_VEXTBOOST
 } LCD_VLCDSel_TypeDef;
+#endif
 
 /** Contrast Configuration */
+#if defined(_SILICON_LABS_32B_SERIES_0)
 typedef enum {
   /** Contrast is adjusted relative to VDD (VLCD) */
   lcdConConfVLCD = LCD_DISPCTRL_CONCONF_VLCD,
   /** Contrast is adjusted relative to Ground */
   lcdConConfGND  = LCD_DISPCTRL_CONCONF_GND
 } LCD_ConConf_TypeDef;
+#endif
 
+#if defined(_SILICON_LABS_32B_SERIES_0)
 /** Voltage Boost Level - Datasheets document setting for each part number */
 typedef enum {
   lcdVBoostLevel0 = LCD_DISPCTRL_VBLEV_LEVEL0, /**< Voltage boost LEVEL0 */
@@ -127,6 +141,16 @@ typedef enum {
   lcdVBoostLevel6 = LCD_DISPCTRL_VBLEV_LEVEL6, /**< Voltage boost LEVEL6 */
   lcdVBoostLevel7 = LCD_DISPCTRL_VBLEV_LEVEL7  /**< Voltage boost LEVEL7 */
 } LCD_VBoostLevel_TypeDef;
+#endif
+
+#if defined(_SILICON_LABS_32B_SERIES_1)
+/** Mode */
+typedef enum {
+  lcdModeNoExtCap = LCD_DISPCTRL_MODE_NOEXTCAP, /**< No external capacitor */
+  lcdModeStepDown = LCD_DISPCTRL_MODE_STEPDOWN, /**< External cap with resistor string */
+  lcdModeCpIntOsc = LCD_DISPCTRL_MODE_CPINTOSC, /**< External cap and internal oscillator */
+} LCD_Mode_Typedef;
+#endif
 
 /** Frame Counter Clock Prescaler, FC-CLK = FrameRate (Hz) / this factor */
 typedef enum {
@@ -140,6 +164,7 @@ typedef enum {
   lcdFCPrescDiv8 = LCD_BACTRL_FCPRESC_DIV8
 } LCD_FCPreScale_TypeDef;
 
+#if defined(_SILICON_LABS_32B_SERIES_0)
 /** Segment selection */
 typedef enum {
   /** Select segment lines 0 to 3 */
@@ -170,6 +195,7 @@ typedef enum {
   lcdSegmentAll   = (0x03ff)
 #endif
 } LCD_SegmentRange_TypeDef;
+#endif
 
 /** Update Data Control */
 typedef enum {
@@ -243,13 +269,23 @@ typedef struct {
   LCD_Bias_TypeDef    bias;
   /** Wave configuration */
   LCD_Wave_TypeDef    wave;
+#if defined(_SILICON_LABS_32B_SERIES_0)
   /** VLCD Select */
   LCD_VLCDSel_TypeDef vlcd;
   /** Contrast Configuration */
   LCD_ConConf_TypeDef contrast;
+#endif
+#if defined(_SILICON_LABS_32B_SERIES_1)
+  /** Mode */
+  LCD_Mode_Typedef    mode;
+  uint8_t             chgrDst;
+  uint8_t             frameRateDivider;
+  int                 contrastLevel;
+#endif
 } LCD_Init_TypeDef;
 
 /** Default config for LCD init structure, enables 160 segments  */
+#if defined(_SILICON_LABS_32B_SERIES_0)
 #define LCD_INIT_DEFAULT \
   {                      \
     true,                \
@@ -257,31 +293,56 @@ typedef struct {
     lcdBiasOneThird,     \
     lcdWaveLowPower,     \
     lcdVLCDSelVDD,       \
-    lcdConConfVLCD       \
+    lcdConConfVLCD,      \
   }
+#endif
+
+#if defined(_SILICON_LABS_32B_SERIES_1)
+#define LCD_INIT_DEFAULT        \
+  {                             \
+    true,                       \
+    lcdMuxQuadruplex,           \
+    lcdBiasOneThird,            \
+    lcdWaveLowPower,            \
+    lcdModeNoExtCap,            \
+    0,                          \
+    LCD_DEFAULT_FRAME_RATE_DIV, \
+    LCD_DEFAULT_CONTRAST        \
+  }
+#endif
 
 /*******************************************************************************
  *****************************   PROTOTYPES   **********************************
  ******************************************************************************/
 
 void LCD_Init(const LCD_Init_TypeDef *lcdInit);
+#if defined(_SILICON_LABS_32B_SERIES_0)
 void LCD_VLCDSelect(LCD_VLCDSel_TypeDef vlcd);
+#endif
 void LCD_UpdateCtrl(LCD_UpdateCtrl_TypeDef ud);
 void LCD_FrameCountInit(const LCD_FrameCountInit_TypeDef *fcInit);
 void LCD_AnimInit(const LCD_AnimInit_TypeDef *animInit);
 
+#if defined(_SILICON_LABS_32B_SERIES_0)
 void LCD_SegmentRangeEnable(LCD_SegmentRange_TypeDef segment, bool enable);
+#endif
 void LCD_SegmentSet(int com, int bit, bool enable);
 void LCD_SegmentSetLow(int com, uint32_t mask, uint32_t bits);
 #if defined(_LCD_SEGD0H_MASK)
 void LCD_SegmentSetHigh(int com, uint32_t mask, uint32_t bits);
 #endif
 void LCD_ContrastSet(int level);
+void LCD_BiasSet(LCD_Bias_TypeDef bias);
+#if defined(_SILICON_LABS_32B_SERIES_0)
 void LCD_VBoostSet(LCD_VBoostLevel_TypeDef vboost);
-
+#endif
 #if defined(LCD_CTRL_DSC)
 void LCD_BiasSegmentSet(int segment, int biasLevel);
 void LCD_BiasComSet(int com, int biasLevel);
+#endif
+#if defined(_SILICON_LABS_32B_SERIES_1)
+void LCD_ModeSet(LCD_Mode_Typedef mode);
+void LCD_ChargeRedistributionCyclesSet(uint8_t cycles);
 #endif
 
 /***************************************************************************//**
@@ -553,8 +614,6 @@ __STATIC_INLINE void LCD_DSCEnable(bool enable)
 
 /** @} (end addtogroup LCD) */
 /** @} (end addtogroup emlib) */
-
-#endif /* !defined(_SILICON_LABS_GECKO_INTERNAL_SDID_100) */
 
 #ifdef __cplusplus
 }

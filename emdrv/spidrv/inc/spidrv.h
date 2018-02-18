@@ -1,10 +1,10 @@
 /***************************************************************************//**
  * @file spidrv.h
  * @brief SPIDRV API definition.
- * @version 5.2.1
+ * @version 5.3.5
  *******************************************************************************
  * # License
- * <b>(C) Copyright 2014 Silicon Labs, http://www.silabs.com</b>
+ * <b>(C) Copyright 2014 Silicon Labs, www.silabs.com</b>
  *******************************************************************************
  *
  * This file is licensed under the Silabs License Agreement. See the file
@@ -170,6 +170,24 @@ typedef SPIDRV_HandleData_t * SPIDRV_Handle_t;
 
 #if defined(USART0)
 /// Configuration data for SPI master using USART0.
+#if defined(SLSTK3301A_EFM32TG11)
+#define SPIDRV_MASTER_USART0                                           \
+  {                                                                    \
+    USART0,                     /* USART port                       */ \
+    _USART_ROUTELOC0_TXLOC_LOC2, /* USART Tx pin location number    */ \
+    _USART_ROUTELOC0_RXLOC_LOC2, /* USART Rx pin location number    */ \
+    _USART_ROUTELOC0_CLKLOC_LOC2, /* USART Clk pin location number  */ \
+    _USART_ROUTELOC0_CSLOC_LOC2, /* USART Cs pin location number    */ \
+    1000000,                    /* Bitrate                          */ \
+    8,                          /* Frame length                     */ \
+    0,                          /* Dummy tx value for rx only funcs */ \
+    spidrvMaster,               /* SPI mode                         */ \
+    spidrvBitOrderMsbFirst,     /* Bit order on bus                 */ \
+    spidrvClockMode0,           /* SPI clock/phase mode             */ \
+    spidrvCsControlAuto,        /* CS controlled by the driver      */ \
+    spidrvSlaveStartImmediate   /* Slave start transfers immediately*/ \
+  }
+#else
 #define SPIDRV_MASTER_USART0                                           \
   {                                                                    \
     USART0,                     /* USART port                       */ \
@@ -187,6 +205,7 @@ typedef SPIDRV_HandleData_t * SPIDRV_Handle_t;
     spidrvSlaveStartImmediate   /* Slave start transfers immediately*/ \
   }
 #endif
+#endif
 
 #if defined(USART1)
 /// Configuration data for SPI master using USART1.
@@ -198,6 +217,23 @@ typedef SPIDRV_HandleData_t * SPIDRV_Handle_t;
     _USART_ROUTELOC0_RXLOC_LOC0, /* USART Rx pin location number    */ \
     _USART_ROUTELOC0_CLKLOC_LOC0, /* USART Clk pin location number  */ \
     _USART_ROUTELOC0_CSLOC_LOC0, /* USART Cs pin location number    */ \
+    1000000,                    /* Bitrate                          */ \
+    8,                          /* Frame length                     */ \
+    0,                          /* Dummy tx value for rx only funcs */ \
+    spidrvMaster,               /* SPI mode                         */ \
+    spidrvBitOrderMsbFirst,     /* Bit order on bus                 */ \
+    spidrvClockMode0,           /* SPI clock/phase mode             */ \
+    spidrvCsControlAuto,        /* CS controlled by the driver      */ \
+    spidrvSlaveStartImmediate   /* Slave start transfers immediately*/ \
+  }
+#elif defined(SLSTK3301A_EFM32TG11)
+#define SPIDRV_MASTER_USART1                                           \
+  {                                                                    \
+    USART1,                     /* USART port                       */ \
+    _USART_ROUTELOC0_TXLOC_LOC2, /* USART Tx pin location number    */ \
+    _USART_ROUTELOC0_RXLOC_LOC2, /* USART Rx pin location number    */ \
+    _USART_ROUTELOC0_CLKLOC_LOC1, /* USART Clk pin location number  */ \
+    _USART_ROUTELOC0_CSLOC_LOC4, /* USART Cs pin location number    */ \
     1000000,                    /* Bitrate                          */ \
     8,                          /* Frame length                     */ \
     0,                          /* Dummy tx value for rx only funcs */ \
@@ -309,6 +345,24 @@ typedef SPIDRV_HandleData_t * SPIDRV_Handle_t;
 
 #if defined(USART0)
 /// Configuration data for SPI slave using USART0.
+#if defined(SLSTK3301A_EFM32TG11)
+#define SPIDRV_SLAVE_USART0                                            \
+  {                                                                    \
+    USART0,                     /* USART port                       */ \
+    _USART_ROUTELOC0_TXLOC_LOC2, /* USART Tx pin location number    */ \
+    _USART_ROUTELOC0_RXLOC_LOC2, /* USART Rx pin location number    */ \
+    _USART_ROUTELOC0_CLKLOC_LOC2, /* USART Clk pin location number  */ \
+    _USART_ROUTELOC0_CSLOC_LOC2, /* USART Cs pin location number    */ \
+    0,                          /* Bitrate                          */ \
+    8,                          /* Frame length                     */ \
+    0,                          /* Dummy tx value for rx only funcs */ \
+    spidrvSlave,                /* SPI mode                         */ \
+    spidrvBitOrderMsbFirst,     /* Bit order on bus                 */ \
+    spidrvClockMode0,           /* SPI clock/phase mode             */ \
+    spidrvCsControlAuto,        /* CS controlled by the driver      */ \
+    spidrvSlaveStartImmediate   /* Slave start transfers immediately*/ \
+  }
+#else
 #define SPIDRV_SLAVE_USART0                                            \
   {                                                                    \
     USART0,                     /* USART port                       */ \
@@ -326,6 +380,7 @@ typedef SPIDRV_HandleData_t * SPIDRV_Handle_t;
     spidrvSlaveStartImmediate   /* Slave start transfers immediately*/ \
   }
 #endif
+#endif
 
 #if defined(USART1)
 /// Configuration data for SPI slave using USART1.
@@ -337,6 +392,23 @@ typedef SPIDRV_HandleData_t * SPIDRV_Handle_t;
     _USART_ROUTELOC0_RXLOC_LOC0, /* USART Rx pin location number    */ \
     _USART_ROUTELOC0_CLKLOC_LOC0, /* USART Clk pin location number  */ \
     _USART_ROUTELOC0_CSLOC_LOC0, /* USART Cs pin location number    */ \
+    0,                          /* Bitrate                          */ \
+    8,                          /* Frame length                     */ \
+    0,                          /* Dummy tx value for rx only funcs */ \
+    spidrvSlave,                /* SPI mode                         */ \
+    spidrvBitOrderMsbFirst,     /* Bit order on bus                 */ \
+    spidrvClockMode0,           /* SPI clock/phase mode             */ \
+    spidrvCsControlAuto,        /* CS controlled by the driver      */ \
+    spidrvSlaveStartImmediate   /* Slave start transfers immediately*/ \
+  }
+#elif defined(SLSTK3301A_EFM32TG11)
+#define SPIDRV_SLAVE_USART1                                            \
+  {                                                                    \
+    USART1,                     /* USART port                       */ \
+    _USART_ROUTELOC0_TXLOC_LOC2, /* USART Tx pin location number    */ \
+    _USART_ROUTELOC0_RXLOC_LOC2, /* USART Rx pin location number    */ \
+    _USART_ROUTELOC0_CLKLOC_LOC1, /* USART Clk pin location number  */ \
+    _USART_ROUTELOC0_CSLOC_LOC4, /* USART Cs pin location number    */ \
     0,                          /* Bitrate                          */ \
     8,                          /* Frame length                     */ \
     0,                          /* Dummy tx value for rx only funcs */ \

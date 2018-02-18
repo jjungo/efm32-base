@@ -1,10 +1,10 @@
 /**************************************************************************//**
 * @file em_opamp.h
 * @brief Operational Amplifier (OPAMP) peripheral API
-* @version 5.2.1
+* @version 5.3.5
 ******************************************************************************
 * # License
-* <b>Copyright 2016 Silicon Laboratories, Inc. http://www.silabs.com</b>
+* <b>Copyright 2016 Silicon Laboratories, Inc. www.silabs.com</b>
 *******************************************************************************
 *
 * Permission is granted to anyone to use this software for any purpose,
@@ -66,7 +66,13 @@ extern "C" {
 #if defined(_SILICON_LABS_32B_SERIES_0)
 #define DAC_OPA_VALID(opa)    ((opa) <= OPA2)
 #elif defined(_SILICON_LABS_32B_SERIES_1)
+#if defined(VDAC_STATUS_OPA2ENS)
 #define VDAC_OPA_VALID(opa)   ((opa) <= OPA2)
+#elif  defined(VDAC_STATUS_OPA1ENS)
+#define VDAC_OPA_VALID(opa)   ((opa) <= OPA1)
+#else
+#define VDAC_OPA_VALID(opa)   ((opa) = OPA0)
+#endif
 #endif
 
 /** @endcond */
@@ -77,9 +83,15 @@ extern "C" {
 
 /** OPAMP selector values. */
 typedef enum {
+#if defined(_SILICON_LABS_32B_SERIES_0) || defined(VDAC_STATUS_OPA0ENS)
   OPA0 = 0,                   /**< Select OPA0. */
+#endif
+#if defined(_SILICON_LABS_32B_SERIES_0) || defined(VDAC_STATUS_OPA1ENS)
   OPA1 = 1,                   /**< Select OPA1. */
+#endif
+#if defined(_SILICON_LABS_32B_SERIES_0) || defined(VDAC_STATUS_OPA2ENS)
   OPA2 = 2                    /**< Select OPA2. */
+#endif
 } OPAMP_TypeDef;
 
 /** OPAMP negative terminal input selection values. */
@@ -388,10 +400,12 @@ typedef enum {
   opaPrsSelCh5     = VDAC_OPA_CTRL_PRSSEL_PRSCH5,   /**< PRS channel 5 triggers OPAMP.              */
   opaPrsSelCh6     = VDAC_OPA_CTRL_PRSSEL_PRSCH6,   /**< PRS channel 6 triggers OPAMP.              */
   opaPrsSelCh7     = VDAC_OPA_CTRL_PRSSEL_PRSCH7,   /**< PRS channel 7 triggers OPAMP.              */
+#if defined(VDAC_OPA_CTRL_PRSSEL_PRSCH8)
   opaPrsSelCh8     = VDAC_OPA_CTRL_PRSSEL_PRSCH8,   /**< PRS channel 8 triggers OPAMP.              */
   opaPrsSelCh9     = VDAC_OPA_CTRL_PRSSEL_PRSCH9,   /**< PRS channel 9 triggers OPAMP.              */
   opaPrsSelCh10    = VDAC_OPA_CTRL_PRSSEL_PRSCH10,  /**< PRS channel 10 triggers OPAMP.             */
   opaPrsSelCh11    = VDAC_OPA_CTRL_PRSSEL_PRSCH11,  /**< PRS channel 11 triggers OPAMP.             */
+#endif
 } OPAMP_PrsSel_TypeDef;
 
 typedef enum {
