@@ -32,9 +32,11 @@ if(CPU_FAMILY_U STREQUAL "EFM32ZG" OR CPU_FAMILY_U STREQUAL "EFM32HG")
 	message("Architecture: cortex-m0plus")
 	set(CPU_TYPE "m0plus")
 	set(CPU_FIX "")
+# TODO if CPU FAMILY == EFR32 set a USE_RAIL variable
 elseif(CPU_FAMILY_U STREQUAL "EFM32WG" OR CPU_FAMILY_U STREQUAL "EZR32WG" 
 		OR CPU_FAMILY_U STREQUAL "EFM32PG1B" OR CPU_FAMILY_U STREQUAL "EFR32FG1B"
 		OR CPU_FAMILY_U STREQUAL "EFM32PG12B" OR CPU_FAMILY_U STREQUAL "EFR32FG12B"
+        OR CPU_FAMILY_U STREQUAL "EFR32FG1P"
 		OR CPU_FAMILY_U STREQUAL "EFM32PG13B" OR CPU_FAMILY_U STREQUAL "EFR32FG13B")
 	message("Architecture: cortex-m4")
 	set(CPU_TYPE "m4")
@@ -46,6 +48,8 @@ else()
 endif()
 
 # Include libraries
+# TODO if USE_RAIL is define then include rail.cmake
+include(${CMAKE_CURRENT_LIST_DIR}/../radio/rail_lib/rail.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/../Device/device.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/../CMSIS/cmsis.cmake)
 if(NOT DEFINED NO_EMLIB)
@@ -55,7 +59,8 @@ endif()
 # Set compiler flags
 # Common arguments
 add_definitions("-D${DEVICE}")
-set(COMMON_DEFINITIONS "-Wextra -Wall -Wno-unused-parameter -mcpu=cortex-${CPU_TYPE} -mthumb -fno-builtin -ffunction-sections -fdata-sections -fomit-frame-pointer ${OPTIONAL_DEBUG_SYMBOLS}")
+# TODO mfloat and mfpu should be chip specific
+set(COMMON_DEFINITIONS "-Wextra -Wall -Wno-unused-parameter -mfloat-abi=softfp -mfpu=fpv4-sp-d16 -mcpu=cortex-${CPU_TYPE} -mthumb -ffunction-sections -fdata-sections  ${OPTIONAL_DEBUG_SYMBOLS}")
 set(DEPFLAGS "-MMD -MP")
 
 # Enable FLTO optimization if required
@@ -66,16 +71,16 @@ else()
 endif()
 
 # Build flags
-set(CMAKE_C_FLAGS "-std=gnu99 ${COMMON_DEFINITIONS} ${CPU_FIX} --specs=nano.specs ${DEPFLAGS}")
-set(CMAKE_CXX_FLAGS "${COMMON_DEFINITIONS} ${CPU_FIX} --specs=nano.specs ${DEPFLAGS}")
+set(CMAKE_C_FLAGS "-std=gnu99 ${COMMON_DEFINITIONS} ${CPU_FIX} ${DEPFLAGS} ")
+set(CMAKE_CXX_FLAGS "${COMMON_DEFINITIONS} ${CPU_FIX} ${DEPFLAGS}")
 set(CMAKE_ASM_FLAGS "${COMMON_DEFINITIONS} -x assembler-with-cpp -DLOOP_ADDR=0x8000")
-set(CMAKE_EXE_LINKER_FLAGS "${COMMON_DEFINITIONS} -Xlinker -T${LINKER_SCRIPT} -Wl,-Map=${CMAKE_PROJECT_NAME}.map -Wl,--gc-sections -Wl,-v")
+set(CMAKE_EXE_LINKER_FLAGS "${COMMON_DEFINITIONS} --specs=nano.specs --specs=nosys.specs -Xlinker -T${LINKER_SCRIPT} -Wl,-Map=${CMAKE_PROJECT_NAME}.map -Wl,--gc-sections -Wl,-v")
 
 # Set default inclusions
-set(LIBS ${LIBS} -lgcc -lc -lnosys -lgcc -lc -lnosys)
+set(LIBS ${LIBS} -lgcc -lc -lnosys)
 
 # Debug Flags
-set(COMMON_DEBUG_FLAGS "-O0 -g -gdwarf-2")
+set(COMMON_DEBUG_FLAGS "-g -gdwarf-2")
 set(CMAKE_C_FLAGS_DEBUG   "${COMMON_DEBUG_FLAGS}")
 set(CMAKE_CXX_FLAGS_DEBUG "${COMMON_DEBUG_FLAGS}")
 set(CMAKE_ASM_FLAGS_DEBUG "${COMMON_DEBUG_FLAGS}")

@@ -22,14 +22,14 @@ include(${BASE_LOCATION}/toolchain/arm-gcc.cmake)
 ##### Project Setup #####
 
 # Set our output target
-set(TARGET efm32-test)
+set(TARGET efr32fg)
 
 # Configure project and languages
 project(${TARGET} C CXX ASM)
 
 # Set device
 if(NOT DEVICE)
-set(DEVICE EFM32GG990F1024)
+    set(DEVICE EFR32FG1P132F256GM48)
 endif()
 
 # Set build
@@ -53,6 +53,7 @@ include_directories(${BASE_LOCATION}/include)
 # Add project sources
 set(SOURCES
 	source/main.c
+	source/rail_config.c
 )
 
 ##### Outputs #####
