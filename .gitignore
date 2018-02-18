@@ -1,6 +1,9 @@
 # Build directories
 build/
+cmake-build-debug/
+cmake-build-release/
 builds/
+.idea/
 
 # Generated Files
 *.o
