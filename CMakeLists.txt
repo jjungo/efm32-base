@@ -59,7 +59,7 @@ set(SOURCES
 ##### Outputs #####
 
 # Generate executable and link
-add_executable(${TARGET} ${SOURCES})
+add_executable(${TARGET} ${SOURCES} ${DRV_SOURCES})
 target_link_libraries(${TARGET} ${LIBS})
 
 ##### Post build #####
